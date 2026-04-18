@@ -91,7 +91,7 @@ export class ERC8004Client {
         abi: IDENTITY_REGISTRY_ABI,
         functionName: "getAgentIdByOwner",
         args: [ownerAddress],
-      }) as [bigint, boolean];
+      }) as unknown as [bigint, boolean];
 
       if (result[1]) {
         console.log(`[ERC8004] Found agentId ${result[0]} via direct mapping for ${ownerAddress}`);
@@ -171,19 +171,19 @@ export class ERC8004Client {
         abi: IDENTITY_REGISTRY_ABI,
         functionName: "ownerOf",
         args: [agentId],
-      }) as Promise<Address>,
+      }) as unknown as Promise<Address>,
       this.publicClient.readContract({
         address: ERC8004_CONTRACTS.identityRegistry,
         abi: IDENTITY_REGISTRY_ABI,
         functionName: "tokenURI",
         args: [agentId],
-      }) as Promise<string>,
+      }) as unknown as Promise<string>,
       this.publicClient.readContract({
         address: ERC8004_CONTRACTS.identityRegistry,
         abi: IDENTITY_REGISTRY_ABI,
         functionName: "getAgentWallet",
         args: [agentId],
-      }) as Promise<Address>,
+      }) as unknown as Promise<Address>,
     ]);
 
     return { agentId, owner, agentURI, agentWallet };
@@ -211,7 +211,7 @@ export class ERC8004Client {
       abi: REPUTATION_REGISTRY_ABI,
       functionName: "getSummary",
       args: [agentId, [], "", ""],
-    })) as [bigint, bigint, number];
+    })) as unknown as [bigint, bigint, number];
 
     return {
       count: Number(result[0]),
@@ -228,7 +228,7 @@ export class ERC8004Client {
       abi: REPUTATION_REGISTRY_ABI,
       functionName: "getClients",
       args: [agentId],
-    })) as Address[];
+    })) as unknown as Address[];
 
     if (clients.length === 0) return [];
 
@@ -237,7 +237,7 @@ export class ERC8004Client {
       abi: REPUTATION_REGISTRY_ABI,
       functionName: "readAllFeedback",
       args: [agentId, clients, "", "", false],
-    })) as [Address[], bigint[], bigint[], number[], string[], string[], boolean[]];
+    })) as unknown as [Address[], bigint[], bigint[], number[], string[], string[], boolean[]];
 
     const [
       returnedClients,
@@ -287,7 +287,7 @@ export class ERC8004Client {
       abi: VALIDATION_REGISTRY_ABI,
       functionName: "getSummary",
       args: [agentId, [], ""],
-    })) as [bigint, number];
+    })) as unknown as [bigint, number];
 
     return {
       count: Number(result[0]),
@@ -302,7 +302,7 @@ export class ERC8004Client {
       abi: VALIDATION_REGISTRY_ABI,
       functionName: "getAgentValidations",
       args: [agentId],
-    })) as `0x${string}`[];
+    })) as unknown as `0x${string}`[];
   }
 
   /** Get validation status by request hash */
@@ -312,7 +312,7 @@ export class ERC8004Client {
       abi: VALIDATION_REGISTRY_ABI,
       functionName: "getValidationStatus",
       args: [requestHash],
-    })) as [Address, bigint, number, `0x${string}`, string, bigint];
+    })) as unknown as [Address, bigint, number, `0x${string}`, string, bigint];
 
     return {
       validatorAddress: result[0],

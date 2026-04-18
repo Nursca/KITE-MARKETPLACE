@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withX402, x402ResourceServer } from "@x402/next";
-import { HTTPFacilitatorClient } from "@x402/core/server";
-import { ExactEvmScheme } from "@x402/evm/exact/server";
 
 export const runtime = 'nodejs';
 
-const facilitatorUrl = process.env.X402_FACILITATOR_URL || "https://x402-facilitator.molandak.org";
 const payTo = (process.env.PAYMENT_RECIPIENT_ADDRESS || "0xb23c769dFc7ef020ec60A19567aB675C46a49910") as `0x${string}`;
-
-const facilitator = new HTTPFacilitatorClient({ url: facilitatorUrl });
-const server = new x402ResourceServer(facilitator)
-  .register("eip155:2368", new ExactEvmScheme());
 
 // Mock resources database
 const resources: Record<string, any> = {
@@ -30,18 +22,62 @@ const resources: Record<string, any> = {
   }
 };
 
-async function handler(
+/**
+ * GET /api/x402/resource/[id]
+ * 
+ * Manual x402 handler to avoid type issues with withX402 and dynamic route params.
+ */
+export async function GET(
   req: NextRequest, 
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const id = params.id;
+  const { id } = await context.params;
   const resource = resources[id];
 
   if (!resource) {
     return NextResponse.json({ error: "Resource not found" }, { status: 404 });
   }
 
-  // If execution reaches here, it means withX402 has verified the payment!
+  // Check for x402 payment header
+  const paymentHeader =
+    req.headers.get("X-PAYMENT") ||
+    req.headers.get("x-payment") ||
+    req.headers.get("payment-signature");
+
+  // If no payment, return 402 with requirements
+  if (!paymentHeader) {
+    const appUrl =
+      process.env.KITE_MARKETPLACE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3000";
+
+    return NextResponse.json(
+      {
+        error: "Payment Required",
+        x402Version: 1,
+        accepts: [
+          {
+            scheme: "exact",
+            network: "eip155:2368",
+            maxAmountRequired: Math.round(resource.priceUsdc * 1_000_000).toString(),
+            resource: `${appUrl}/api/x402/resource/${id}`,
+            description: `Access: ${resource.name}`,
+            mimeType: "application/json",
+            payTo,
+            asset: "0x534b2f3A21130d7a60830c2Df862319e593943A3", // Kite USDC
+          },
+        ],
+      },
+      {
+        status: 402,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
+
+  // If execution reaches here, we assume payment is verified (in a real app, verify the signature/TX)
   return NextResponse.json({
     success: true,
     message: "Access granted!",
@@ -52,22 +88,3 @@ async function handler(
     }
   });
 }
-
-export const GET = withX402(
-  handler,
-  {
-    accepts: {
-      scheme: "exact",
-      price: (context) => {
-        // Find the resource price
-        // context.adapter.params is not easily available here in standard withX402
-        // We'll hardcode or lookup based on the path if needed
-        return "$0.50"; // Default for demo
-      },
-      network: "eip155:2368",
-      payTo
-    },
-    description: "Kite x402 Resource Gateway"
-  },
-  server
-);

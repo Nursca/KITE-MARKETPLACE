@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { toolRegistry, defineTool } from "../tool-registry";
 import productsData from "../../../../data/products.json";
+import { listingStore } from "../../listing-store";
 
 interface Product {
   id: string;
@@ -28,7 +29,7 @@ const products = productsData as Product[];
 
 const searchProductsTool = defineTool({
   name: "search_products",
-  description: "Search the product catalog and return matching items.",
+  description: "Search the physical product catalog and return matching items.",
   inputSchema: z.object({
     query: z.string().describe("The plain-text search term"),
     maxPrice: z.number().optional().describe("Maximum price filter"),
@@ -53,6 +54,18 @@ const searchProductsTool = defineTool({
       success: true,
       products: results,
       count: results.length
+    };
+  },
+});
+
+const getMarketplaceStatsTool = defineTool({
+  name: "get_marketplace_stats",
+  description: "Get live Kite Marketplace stats: listings, sales volume, top sellers.",
+  inputSchema: z.object({}),
+  handler: async () => {
+    return {
+      success: true,
+      stats: listingStore.getStats()
     };
   },
 });
@@ -87,7 +100,8 @@ const getProductDetailsTool = defineTool({
 
 export function registerShoppingTools(): void {
   toolRegistry.register(searchProductsTool, "shopping");
+  toolRegistry.register(getMarketplaceStatsTool, "shopping");
   toolRegistry.register(getProductDetailsTool, "shopping");
   
-  console.log("[Shopping Tools] ✅ Registered 2 tools");
+  console.log("[Shopping Tools] ✅ Registered 3 tools");
 }

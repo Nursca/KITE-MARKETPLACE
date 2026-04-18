@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MONA",
-  description: "The first AI-native shopping experience built on Monad.",
+  title: "KIMA",
+  description: "The first AI-native shopping experience built on KIMAd.",
 };
 
 export default function RootLayout({

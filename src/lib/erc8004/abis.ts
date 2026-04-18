@@ -47,6 +47,17 @@ export const IDENTITY_REGISTRY_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  // getAgentIdByOwner
+  {
+    inputs: [{ internalType: "address", name: "owner", type: "address" }],
+    name: "getAgentIdByOwner",
+    outputs: [
+      { internalType: "uint256", name: "agentId", type: "uint256" },
+      { internalType: "bool", name: "exists", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const;
 
 export const REPUTATION_REGISTRY_ABI = [

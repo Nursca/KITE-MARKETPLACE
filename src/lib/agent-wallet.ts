@@ -60,5 +60,5 @@ export async function getAgentAddress(): Promise<string | null> {
   const wallet = await getAgentWallet();
   if (!wallet) return null;
   const address = await wallet.getDefaultAddress();
-  return address.getAddressId();
+  return address.getId();
 }

@@ -15,7 +15,7 @@ export async function executeAgentPurchase(productId: string, amount: number) {
   const { GokiteAASDK } = await import('gokite-aa-sdk');
   const sdk = new GokiteAASDK('kite_testnet', KITE_RPC, BUNDLER_RPC);
 
-  const ownerAddress = (await wallet.getDefaultAddress()).getAddressId();
+  const ownerAddress = (await wallet.getDefaultAddress()).getId();
   const aaAddress = sdk.getAccountAddress(ownerAddress);
 
   console.log(`Agent ${aaAddress} (Owner: ${ownerAddress}) initiating autonomous purchase...`);
@@ -31,8 +31,10 @@ export async function executeAgentPurchase(productId: string, amount: number) {
       
       const signFunction = async (userOpHash: string): Promise<string> => {
         // Sign the hash using CDP Wallet MPC signing
-        const signature = await wallet.signPayload(userOpHash);
-        return signature as string;
+        const payloadSignature = await wallet.createPayloadSignature(userOpHash);
+        const signature = payloadSignature.getSignature();
+        if (!signature) throw new Error("Failed to get signature from CDP wallet");
+        return signature;
       };
 
       // Execute the transfer via AA UserOperation on Kite

@@ -1,22 +1,52 @@
 {
   "name": "Kite Marketplace Agent",
-  "description": "Autonomous commerce agent for Kite Testnet",
-  "version": "1.0.0",
+  "description": "Autonomous commerce agent for Kite Testnet — Buy AND Sell digital resources.",
+  "version": "1.1.0",
   "tools": [
     {
       "name": "search",
-      "description": "Search for products and APIs",
+      "description": "Search physical product catalog",
       "command": "node packages/mcp-client/superio.js search \"{{query}}\""
     },
     {
-      "name": "wallet",
-      "description": "Check autonomous wallet balance",
-      "command": "node packages/mcp-client/superio.js wallet"
+      "name": "list_listings",
+      "description": "Browse all paywalled digital listings (APIs, datasets, etc.)",
+      "command": "node packages/mcp-client/superio.js list --type \"{{type}}\""
+    },
+    {
+      "name": "preview",
+      "description": "Preview a listing before buying (free)",
+      "command": "node packages/mcp-client/superio.js preview \"{{id}}\""
     },
     {
       "name": "buy",
-      "description": "Purchase a product automatically",
-      "command": "node packages/mcp-client/superio.js buy \"{{id}}\""
+      "description": "Purchase a digital listing (x402 flow)",
+      "command": "node packages/mcp-client/superio.js buy \"{{id}}\" \"{{amount}}\""
+    },
+    {
+      "name": "sell",
+      "description": "Create a paywalled listing to earn USDC",
+      "command": "node packages/mcp-client/superio.js sell --type \"{{type}}\" --name \"{{name}}\" --price \"{{price}}\" --content \"{{content}}\" --preview \"{{preview}}\" --address \"{{address}}\""
+    },
+    {
+      "name": "wallet",
+      "description": "Check autonomous agent wallet status",
+      "command": "node packages/mcp-client/superio.js wallet"
+    },
+    {
+      "name": "stats",
+      "description": "Get live marketplace stats",
+      "command": "node packages/mcp-client/superio.js stats"
+    },
+    {
+      "name": "register_identity",
+      "description": "Register ERC-8004 on-chain agent identity",
+      "command": "node packages/mcp-client/superio.js register"
+    },
+    {
+      "name": "check_reputation",
+      "description": "Check an agent's reputation score",
+      "command": "node packages/mcp-client/superio.js reputation \"{{agentId}}\""
     }
   ],
   "networks": [
@@ -24,7 +54,9 @@
       "name": "Kite Testnet",
       "chainId": 2368,
       "currency": "KITE",
-      "paymentToken": "USDC"
+      "paymentToken": "USDC",
+      "rpc": "https://rpc-testnet.gokite.ai",
+      "explorer": "https://testnet.kiteexplorer.com"
     }
   ]
 }

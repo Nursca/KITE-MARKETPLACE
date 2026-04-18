@@ -18,6 +18,7 @@ export type {
 import { registerShoppingTools } from "./tools/shopping";
 import { registerERC8004Tools } from "./tools/erc8004";
 import { registerResourceTools } from "./tools/resources";
+import { registerPaymentTools } from "./tools/payments";
 import { handleMCPRequest } from "./base-handler";
 
 /**
@@ -31,7 +32,8 @@ export function initializeMCPTools(): void {
   registerShoppingTools();
   registerERC8004Tools();
   registerResourceTools();
-  // We can add more tool registrations here (e.g., payment, a2a)
+  registerPaymentTools();
+  // We can add more tool registrations here (e.g., a2a)
 
   initialized = true;
   console.log("[MCP] All tools initialized");

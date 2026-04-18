@@ -38,7 +38,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({ 
           </div>
           
           <h2 className="text-2xl font-bold text-white mb-2">Order confirmed</h2>
-          <p className="text-green-500 font-medium mb-8">Settled on Monad in ~400ms</p>
+          <p className="text-green-500 font-medium mb-8">Settled on KITE in ~400ms</p>
           
           {/* Order Summary */}
           <div className="bg-neutral-800/50 rounded-xl p-4 mb-6 text-left">
@@ -83,7 +83,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({ 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 font-medium mt-3 transition-colors"
             >
-              View on Monad explorer
+              View on KITE explorer
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
