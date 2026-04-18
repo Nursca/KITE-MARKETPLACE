@@ -53,7 +53,7 @@ Kite Marketplace is an AI-native commerce platform where **agents and humans coe
 ```
 ┌─────────────────────────────────────────────────────┐
 │                   Agent Surfaces                     │
-│   Web (MONA chat) │  MCP (Claude Desktop)  │  CLI    │
+│   Web (KIMA chat) │  MCP (Claude Desktop)  │  CLI    │
 └────────────┬──────┴──────────┬─────────────┴────┬───┘
              │                 │                   │
              ▼                 ▼                   ▼

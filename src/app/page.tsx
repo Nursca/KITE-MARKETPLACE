@@ -37,6 +37,7 @@ interface Listing {
   priceUsdc: number;
   preview: string;
   salesCount: number;
+  totalEarnedUsdc: number;
   creatorAddress: string;
 }
 

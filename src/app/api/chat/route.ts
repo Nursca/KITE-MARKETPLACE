@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai'
-import { streamText, ModelMessage, tool, stepCountIs } from 'ai'
+import { streamText, ModelMessage, tool, stepCountIs, convertToModelMessages } from 'ai'
 import { z } from 'zod'
 import productsData from '@/../data/products.json'
 import { getAgentAddress } from '@/lib/agent-wallet'
@@ -48,13 +48,20 @@ Rules:
 - Keep responses concise and action-oriented`
 
 export async function POST(req: Request) {
-  const { messages }: { messages: ModelMessage[] } = await req.json()
+  const { messages } = await req.json()
+
+  if (!messages) {
+    return new Response('No messages found', { status: 400 })
+  }
 
   const result = streamText({
     model: openai('gpt-4o-mini'),
     system: SYSTEM_PROMPT,
-    messages,
+    messages: await convertToModelMessages(messages),
     stopWhen: stepCountIs(5),
+    onError: ({ error }) => {
+      console.error('[AI Chat Error]', error);
+    },
     tools: {
       searchProducts: {
         description: 'Search physical products: electronics, footwear, bags, gaming, accessories.',

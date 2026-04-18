@@ -18,6 +18,7 @@ export interface Listing {
   creatorAddress: string;
   createdAt: string;
   salesCount: number;
+  totalEarnedUsdc: number;
 }
 
 export interface Sale {
@@ -98,6 +99,7 @@ class ListingStore {
       creatorAddress: "0x0000000000000000000000000000000000000000",
       createdAt: new Date().toISOString(),
       salesCount: 0,
+      totalEarnedUsdc: 0,
       ...args
     } as Listing;
     
@@ -109,6 +111,7 @@ class ListingStore {
     const listing = this.listings.get(listingId);
     if (listing) {
       listing.salesCount++;
+      listing.totalEarnedUsdc += listing.priceUsdc;
       this.sales.push({
         listingId,
         buyerAddress,

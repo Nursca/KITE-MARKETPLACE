@@ -70,7 +70,7 @@ function ListingCard({ listing, onBuy }: { listing: Listing; onBuy: (id: string)
       <div className="mt-auto">
         <p className="text-[10px] text-on-surface-variant opacity-50 mb-3 italic">{listing.preview}</p>
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-on-surface-variant opacity-40">{listing.salesCount} sold · {listing.totalEarnedUsdc.toFixed(2)} earned</span>
+          <span className="text-[10px] text-on-surface-variant opacity-40">{listing.salesCount} sold · {(listing.totalEarnedUsdc || 0).toFixed(2)} earned</span>
           <button
             onClick={() => onBuy(listing.id)}
             className="flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 text-[10px] font-label uppercase tracking-widest hover:opacity-90 transition-opacity rounded-sm"
@@ -248,7 +248,7 @@ export function ChatUI() {
 
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', parts: [{ type: 'text', text: "Hi! I'm MONA — your autonomous Kite Marketplace agent. I can help you discover and buy digital resources, or help you create listings to earn USDC. What would you like to do?" }] }
+    { id: '1', role: 'assistant', parts: [{ type: 'text', text: "Hi! I'm KIMA — your autonomous Kite Marketplace agent. I can help you discover and buy digital resources, or help you create listings to earn USDC. What would you like to do?" }] }
   ])
   const [isLoading, setIsLoading] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
@@ -311,14 +311,17 @@ export function ChatUI() {
     const newMessages = [...messages, userMessage]
     setMessages(newMessages); setInput(''); setIsLoading(true)
     try {
+      console.log('Sending messages:', newMessages)
       const response = await fetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ messages: newMessages.map(m => ({ role: m.role, content: m.parts.filter(p => p.type === 'text').map(p => p.type === 'text' ? p.text : '').join('') })) })
+        body: JSON.stringify({ messages: newMessages })
       })
+      console.log('Response status:', response.status)
       if (!response.ok) throw new Error('Failed to fetch')
       if (!response.body) throw new Error('No body')
       const messageStream = readUIMessageStream({ stream: response.body as any })
       for await (const message of messageStream) {
+        console.log('Received chunk:', message)
         setMessages(prev => {
           const index = prev.findIndex(m => m.id === message.id)
           if (index !== -1) { const updated = [...prev]; updated[index] = message; return updated }
@@ -383,7 +386,7 @@ export function ChatUI() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm">M</div>
           <div>
-            <h2 className="font-headline text-on-surface leading-none">MONA</h2>
+            <h2 className="font-headline text-on-surface leading-none">KIMA</h2>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-0.5">Kite AI Agent</p>
           </div>
         </div>
@@ -478,7 +481,7 @@ export function ChatUI() {
                     return (
                       <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-primary text-on-primary px-5 py-3.5 rounded-xl' : 'bg-surface-container-high px-5 py-4 rounded-xl'}`}>
-                          {msg.role === 'assistant' && <p className="font-headline italic text-primary mb-1.5 text-sm">MONA</p>}
+                          {msg.role === 'assistant' && <p className="font-headline italic text-primary mb-1.5 text-sm">KIMA</p>}
                           <p className={`text-sm ${msg.role === 'user' ? 'font-medium leading-relaxed' : 'text-on-surface-variant leading-relaxed'}`}>{content}</p>
                           {msg.role === 'assistant' && extMsg.toolInvocations?.map((inv, j) => (
                             <ToolResultBubble key={j} invocation={inv} />
@@ -495,7 +498,7 @@ export function ChatUI() {
                 </div>
                 <form onSubmit={handleSubmit} className="w-full">
                   <div className="relative flex items-center">
-                    <input className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary py-3.5 pl-5 pr-14 text-sm rounded-xl" placeholder="Ask MONA to buy, sell, or browse..." value={input} onChange={e => setInput(e.target.value)} disabled={isLoading} />
+                    <input className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary py-3.5 pl-5 pr-14 text-sm rounded-xl" placeholder="Ask KIMA to buy, sell, or browse..." value={input} onChange={e => setInput(e.target.value)} disabled={isLoading} />
                     <button disabled={isLoading || !input.trim()} className="absolute right-2 p-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg disabled:opacity-50">
                       <span className="material-symbols-outlined text-sm">arrow_upward</span>
                     </button>
@@ -511,7 +514,7 @@ export function ChatUI() {
                       <ProductCard key={p.id} product={p} onAddToCart={() => addItem(p, 1)} />
                     )) : (
                       <div className="space-y-3">
-                        <p className="text-sm opacity-50 italic mb-4">Ask MONA to search products or browse listings...</p>
+                        <p className="text-sm opacity-50 italic mb-4">Ask KIMA to search products or browse listings...</p>
                         {listings.slice(0, 3).map(l => (
                           <ListingCard key={l.id} listing={l} onBuy={handleBuyListing} />
                         ))}
@@ -638,7 +641,7 @@ export function ChatUI() {
                           <p className="text-xs opacity-60">{l.description}</p>
                           <div className="flex items-center justify-between text-[10px] uppercase tracking-widest opacity-50">
                             <span>{l.salesCount} sales</span>
-                            <span>${l.totalEarnedUsdc.toFixed(2)} earned</span>
+                            <span>${(l.totalEarnedUsdc || 0).toFixed(2)} earned</span>
                           </div>
                           <div className="flex items-center gap-2 pt-1">
                             <code className="text-[10px] opacity-40 flex-1 truncate">/{l.id}/content</code>
