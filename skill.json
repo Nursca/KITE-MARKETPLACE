@@ -1,0 +1,30 @@
+{
+  "name": "Kite Marketplace Agent",
+  "description": "Autonomous commerce agent for Kite Testnet",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "search",
+      "description": "Search for products and APIs",
+      "command": "node packages/mcp-client/superio.js search \"{{query}}\""
+    },
+    {
+      "name": "wallet",
+      "description": "Check autonomous wallet balance",
+      "command": "node packages/mcp-client/superio.js wallet"
+    },
+    {
+      "name": "buy",
+      "description": "Purchase a product automatically",
+      "command": "node packages/mcp-client/superio.js buy \"{{id}}\""
+    }
+  ],
+  "networks": [
+    {
+      "name": "Kite Testnet",
+      "chainId": 2368,
+      "currency": "KITE",
+      "paymentToken": "USDC"
+    }
+  ]
+}

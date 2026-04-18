@@ -1,6 +1,6 @@
 /**
  * ERC-8004 Client for the buyer agent.
- * Uses Flow EVM Testnet (chainId 545) as per SuperPage implementation.
+ * Uses Kite Testnet (chainId 2368).
  */
 import {
   createPublicClient,
@@ -21,11 +21,11 @@ import {
 
 export const ERC8004_CONTRACTS = {
   identityRegistry:
-    "0x7096C8FD97a399ec59C8DF7055329223821b46F1" as Address,
+    "0x9788b77d09e2D189B9C7e1D392B7f762D5650a3a" as Address,
   reputationRegistry:
-    "0xc14d1eE6daCfe757cef570B339Ff8Ea7084bf354" as Address,
+    "0xeaD31017A6ca6CEE1bB1BF7c1413CB7071e2B51D" as Address,
   validationRegistry:
-    "0x4fb2aBD8279659187B2792FfA6fE9a4837D4b411" as Address,
+    "0x93ee9C875648846Ba16ff6f6733ebf4659d4Bcbe" as Address,
 } as const;
 
 const KITE_RPC = "https://rpc-testnet.gokite.ai/";
@@ -80,6 +80,56 @@ export class ERC8004Client {
       chain: kiteTestnet,
       transport: http(KITE_RPC),
     });
+  }
+
+  /** Find the agentId for a given owner address */
+  async findAgentId(ownerAddress: Address): Promise<bigint | null> {
+    try {
+      // 1. Try direct on-chain mapping (Most reliable)
+      const result = await this.publicClient.readContract({
+        address: ERC8004_CONTRACTS.identityRegistry,
+        abi: IDENTITY_REGISTRY_ABI,
+        functionName: "getAgentIdByOwner",
+        args: [ownerAddress],
+      }) as [bigint, boolean];
+
+      if (result[1]) {
+        console.log(`[ERC8004] Found agentId ${result[0]} via direct mapping for ${ownerAddress}`);
+        return result[0];
+      }
+    } catch (contractError) {
+      console.warn("[ERC8004] Mapping lookup failed, falling back to logs:", contractError);
+    }
+
+    try {
+      // 2. Fallback: Scan logs (If mapping doesn't exist or contract is old)
+      const logs = await this.publicClient.getLogs({
+        address: ERC8004_CONTRACTS.identityRegistry,
+        event: {
+          type: 'event',
+          name: 'Registered',
+          inputs: [
+            { indexed: true, name: 'agentId', type: 'uint256' },
+            { indexed: false, name: 'agentURI', type: 'string' },
+            { indexed: true, name: 'owner', type: 'address' },
+          ],
+        },
+        args: {
+          owner: ownerAddress
+        },
+        fromBlock: 20924000n 
+      });
+
+      if (logs.length > 0) {
+        const id = logs[logs.length - 1].args.agentId || null;
+        console.log(`[ERC8004] Found agentId ${id} via logs for ${ownerAddress}`);
+        return id;
+      }
+    } catch (logError) {
+      console.error("[ERC8004] Log lookup failed:", logError);
+    }
+    
+    return null;
   }
 
   /** Register this agent on the Identity Registry */

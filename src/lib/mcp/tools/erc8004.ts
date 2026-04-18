@@ -61,6 +61,27 @@ const checkReputationTool = defineTool({
   },
 });
 
+const lookupIdentityByOwnerTool = defineTool({
+  name: "lookup_identity_by_owner",
+  description: "Look up an agent's on-chain ID by their owner wallet address.",
+  inputSchema: z.object({
+    ownerAddress: z.string().describe("The wallet address of the agent owner")
+  }),
+  handler: async ({ ownerAddress }) => {
+    console.log(`[lookup_identity] 🔍 Searching for agent owned by: ${ownerAddress}`);
+    try {
+      const agentId = await erc8004.findAgentId(ownerAddress as `0x${string}`);
+      return {
+        success: true,
+        agentId: agentId ? agentId.toString() : null,
+        found: !!agentId
+      };
+    } catch (error: any) {
+      return { success: false, error: `Lookup failed: ${error.message}` };
+    }
+  },
+});
+
 // ============================================================
 // Register all ERC-8004 tools
 // ============================================================
@@ -68,6 +89,7 @@ const checkReputationTool = defineTool({
 export function registerERC8004Tools(): void {
   toolRegistry.register(registerIdentityTool, "erc8004");
   toolRegistry.register(checkReputationTool, "erc8004");
+  toolRegistry.register(lookupIdentityByOwnerTool, "erc8004");
   
-  console.log("[ERC-8004 Tools] ✅ Registered 2 tools");
+  console.log("[ERC-8004 Tools] ✅ Registered 3 tools");
 }

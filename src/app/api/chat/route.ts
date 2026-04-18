@@ -1,6 +1,5 @@
-import { google } from '@ai-sdk/google'
-import { streamText, tool, ModelMessage, stepCountIs } from 'ai'
-import { z } from 'zod'
+import { openai } from '@ai-sdk/openai'
+import { streamText, ModelMessage } from 'ai'
 import productsData from '@/../data/products.json'
 import { getAgentAddress } from '@/lib/agent-wallet'
 import { executeAgentPurchase } from '@/lib/agent-x402'
@@ -27,93 +26,98 @@ const SYSTEM_PROMPT = `You are MONA, an autonomous AI shopping agent built on Mo
 You help users discover products, make decisions, and settle purchases autonomously using your own CDP-managed wallet.
 
 Your Workflow:
-1. DISCOVER: Use searchProducts to find what the user wants.
-2. DECIDE: Help the user choose by comparing specs and price.
-3. PAY & SETTLE: Use autonomousPurchase to buy the product. You will automatically handle x402 payments using your agent wallet.
-4. OUTCOME: Provide the user with the AP2-compliant JSON receipt returned by the purchase tool.
-
-Tools:
-- searchProducts: search the product catalog.
-- addToCart: add to user's manual cart (for non-autonomous checkout).
-- getAgentWalletAddress: Show your CDP Agent wallet address.
-- autonomousPurchase: Purchase a product autonomously on behalf of the user. This tool handles the x402 payment flow.
+1. DISCOVER: Search for products.
+2. DECIDE: Help the user choose.
+3. PAY & SETTLE: Purchase the product autonomously.
+4. OUTCOME: Provide the JSON receipt.
 
 Rules:
-- Always check your wallet address before suggesting an autonomous purchase so the user knows where the funds come from.
 - Be transparent about costs.
-- When an autonomous purchase is complete, always show the transaction hash and explorer link.
+- Show transaction hashes and explorer links.
 - Keep responses concise.`
 
 export async function POST(req: Request) {
   const { messages }: { messages: ModelMessage[] } = await req.json()
 
   const result = streamText({
-    model: google('gemini-2.0-flash-001'),
+    model: openai('gpt-4o-mini'),
     system: SYSTEM_PROMPT,
     messages,
     maxSteps: 5,
     onError: ({ error }) => {
-      console.error('Gemini Stream Error:', error)
+      console.error('AI Stream Error:', error)
     },
     tools: {
-      searchProducts: tool({
+      searchProducts: {
         description: 'Search the product catalog and return matching items.',
-        parameters: z.object({
-          query: z.string().describe('The plain-text search term'),
-          maxPrice: z.number().optional().describe('Maximum price filter'),
-          category: z.string().optional().describe('One of: electronics, footwear, bags, accessories, gaming')
-        }),
-        execute: async ({ query, maxPrice, category }: { query: string, maxPrice?: number, category?: string }) => {
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'The search query' },
+            maxPrice: { type: 'number', description: 'Max price in USDC' }
+          },
+          required: ['query']
+        },
+        execute: async ({ query, maxPrice }: { query: string, maxPrice?: number }) => {
           const lowerQuery = query.toLowerCase()
-          const filtered = products.filter((p) => {
+          return products.filter((p) => {
             const matchesText = p.name.toLowerCase().includes(lowerQuery) || 
                                p.brand.toLowerCase().includes(lowerQuery) || 
                                p.description.toLowerCase().includes(lowerQuery)
-            const matchesPrice = maxPrice ? p.price <= maxPrice : true
-            const matchesCategory = category ? p.category === category : true
-            return matchesText && matchesPrice && matchesCategory
-          })
-          return filtered.slice(0, 6)
+            const matchesPrice = maxPrice ? p.priceUsdc <= maxPrice : true
+            return matchesText && matchesPrice
+          }).slice(0, 6)
         }
-      }),
-      addToCart: tool({
+      },
+      addToCart: {
         description: 'Add a product to the user\'s manual shopping cart.',
-        parameters: z.object({
-          productId: z.string().describe('The unique ID of the product'),
-          quantity: z.number().default(1).describe('The quantity to add')
-        }),
+        parameters: {
+          type: 'object',
+          properties: {
+            productId: { type: 'string', description: 'The product ID' },
+            quantity: { type: 'number', description: 'Quantity' }
+          },
+          required: ['productId', 'quantity']
+        },
         execute: async ({ productId, quantity }: { productId: string, quantity: number }) => {
           const product = products.find(p => p.id === productId)
-          if (!product) {
-            return { success: false, message: 'Product not found' }
-          }
+          if (!product) return { success: false, message: 'Product not found' }
           return {
             success: true,
             productId,
             productName: product.name,
-            quantity: quantity || 1,
+            quantity,
             product,
-            message: `${quantity || 1} x ${product.name} added to cart`
+            message: `${quantity} x ${product.name} added to cart`
           }
         }
-      }),
-      getAgentWalletAddress: tool({
+      },
+      getAgentWalletAddress: {
         description: 'Get your autonomous CDP Agent wallet address.',
-        parameters: z.object({}),
+        parameters: {
+          type: 'object',
+          properties: {
+            unused: { type: 'string' }
+          }
+        },
         execute: async () => {
           const address = await getAgentAddress();
           return { 
             address: address || "Not configured",
-            network: "Kite Testnet (via CDP Base Sepolia owner)"
+            network: "Kite Testnet"
           };
         }
-      }),
-      autonomousPurchase: tool({
-        description: 'Autonomously purchase a product. This tool will automatically handle x402 payments using the agent\'s funds.',
-        parameters: z.object({
-          productId: z.string().describe('The unique ID of the product to buy'),
-          amount: z.number().describe('The cost of the product in USDC')
-        }),
+      },
+      autonomousPurchase: {
+        description: 'Autonomously purchase a product.',
+        parameters: {
+          type: 'object',
+          properties: {
+            productId: { type: 'string', description: 'The product ID' },
+            amount: { type: 'number', description: 'Price in USDC' }
+          },
+          required: ['productId', 'amount']
+        },
         execute: async ({ productId, amount }) => {
           try {
             return await executeAgentPurchase(productId, amount);
@@ -121,11 +125,11 @@ export async function POST(req: Request) {
             return {
               type: 'AP2_RECEIPT',
               status: 'failed',
-              error: error.message || "Autonomous purchase failed"
+              error: error.message || "Purchase failed"
             };
           }
         }
-      })
+      }
     }
   })
 
