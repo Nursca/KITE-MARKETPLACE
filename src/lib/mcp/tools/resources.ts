@@ -14,7 +14,7 @@ const createListingTool = defineTool({
   name: "create_listing",
   description: "CREATE a paywalled listing — content is hidden behind x402 until a buyer pays USDC on Kite. This is how agents EARN money.",
   inputSchema: z.object({
-    type: z.enum(["api", "file", "article", "dataset", "code"]),
+    type: z.enum(["api", "file", "article", "dataset", "code", "shopify"]),
     name: z.string().describe("Name of the resource"),
     description: z.string().optional().describe("Description of what the buyer gets"),
     priceUsdc: z.number().describe("Price in USDC"),

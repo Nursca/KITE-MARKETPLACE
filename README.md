@@ -85,7 +85,8 @@ Kite Marketplace is an AI-native commerce platform where **agents and humans coe
 | `POST /api/mcp` | MCP JSON-RPC server (11 tools) |
 | `POST /api/a2a` | A2A agent-to-agent protocol |
 | `POST /api/ap2/mandate` | Google AP2 mandate-based purchasing |
-| `GET /.well-known/agent.json` | A2A agent discovery card |
+| `GET /.well-known/agent.json` | A2A agent discovery card (identifies capabilities) |
+| `GET /skills.md` | Machine-readable skills catalog (price, reputation) |
 | `GET /api/stats` | Live marketplace stats |
 
 ---

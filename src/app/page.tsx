@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useAccount } from 'wagmi'
 import { ChatUI } from "@/components/ChatUI";
 import { useAppKit } from '@reown/appkit/react'
@@ -157,6 +156,12 @@ export default function Home() {
             <a href="#marketplace" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
               Marketplace
             </a>
+            <Link href="/connect-shopify" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
+              Connect Shopify
+            </Link>
+            <Link href="/stores" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
+              My Stores
+            </Link>
             <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
               GitHub
             </Link>

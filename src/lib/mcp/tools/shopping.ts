@@ -6,6 +6,7 @@ import { z } from "zod";
 import { toolRegistry, defineTool } from "../tool-registry";
 import productsData from "../../../../data/products.json";
 import { listingStore } from "../../listing-store";
+import { shopifyClient } from "../../shopify";
 
 interface Product {
   id: string;
@@ -94,6 +95,48 @@ const getProductDetailsTool = defineTool({
   },
 });
 
+/**
+ * NEW: Shopify Tools
+ */
+
+const searchShopifyProductsTool = defineTool({
+  name: "search_shopify_products",
+  description: "Search for products on the Shopify store.",
+  inputSchema: z.object({
+    query: z.string().describe("Search term for Shopify products")
+  }),
+  handler: async ({ query }) => {
+    const products = await shopifyClient.searchProducts(query);
+    return {
+      success: true,
+      products,
+      count: products.length
+    };
+  }
+});
+
+const buyShopifyProductTool = defineTool({
+  name: "buy_shopify_product",
+  description: "Purchase a physical product from Shopify using x402 payment flow.",
+  inputSchema: z.object({
+    productId: z.string().describe("The Shopify GID (e.g. gid://shopify/Product/123)"),
+    variantId: z.string().optional().describe("Specific variant ID")
+  }),
+  handler: async ({ productId }) => {
+    const baseUrl = process.env.KITE_MARKETPLACE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const x402Url = `${baseUrl}/api/x402/resource/shopify/${encodeURIComponent(productId)}`;
+
+    return {
+      success: true,
+      action: "X402_PAYMENT_REQUIRED",
+      x402Url,
+      network: "Kite Testnet (chainId 2368)",
+      protocol: "x402 — HTTP 402 + on-chain USDC",
+      message: `To purchase this Shopify item, initiate an x402 payment to ${x402Url}. Payment will trigger order creation.`
+    };
+  }
+});
+
 // ============================================================
 // Register all shopping tools
 // ============================================================
@@ -103,5 +146,9 @@ export function registerShoppingTools(): void {
   toolRegistry.register(getMarketplaceStatsTool, "shopping");
   toolRegistry.register(getProductDetailsTool, "shopping");
   
-  console.log("[Shopping Tools] ✅ Registered 3 tools");
+  // Register Shopify tools
+  toolRegistry.register(searchShopifyProductsTool, "shopping");
+  toolRegistry.register(buyShopifyProductTool, "shopping");
+  
+  console.log("[Shopping Tools] ✅ Registered 5 tools (including Shopify)");
 }

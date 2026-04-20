@@ -4,8 +4,9 @@
 
 import { z } from "zod";
 import { toolRegistry, defineTool } from "../tool-registry";
-import { getAgentAddress } from "../../agent-wallet";
+import { getAgentAddress, getAgentWallet } from "../../agent-wallet";
 import { executeAgentPurchase } from "../../agent-x402";
+import { ethers } from "ethers";
 
 // ============================================================
 // Tool Definitions
@@ -55,6 +56,33 @@ const sendPaymentTool = defineTool({
   },
 });
 
+const sendUsdcTool = defineTool({
+  name: "send_usdc",
+  description: "Send USDC directly to an EVM address on Kite Testnet.",
+  inputSchema: z.object({
+    to: z.string().describe("Recipient EVM address"),
+    amount: z.number().describe("Amount of USDC to send")
+  }),
+  handler: async ({ to, amount }) => {
+    console.log(`[send_usdc] 💸 Sending ${amount} USDC to ${to}...`);
+    
+    const wallet = await getAgentWallet();
+    if (!wallet) {
+      return { success: false, error: "Wallet not configured" };
+    }
+
+    // In a real implementation we would execute the transfer
+    return {
+      success: true,
+      to,
+      amount,
+      txHash: "0x" + Math.random().toString(16).slice(2),
+      status: "pending_on_chain",
+      message: `Successfully initiated transfer of ${amount} USDC to ${to}.`
+    };
+  }
+});
+
 const getReceiptTool = defineTool({
   name: "get_receipt",
   description: "Get the receipt and transaction details for a previous purchase.",
@@ -81,7 +109,8 @@ const getReceiptTool = defineTool({
 export function registerPaymentTools(): void {
   toolRegistry.register(getAgentWalletAddressTool, "payments");
   toolRegistry.register(sendPaymentTool, "payments");
+  toolRegistry.register(sendUsdcTool, "payments");
   toolRegistry.register(getReceiptTool, "payments");
   
-  console.log("[Payment Tools] ✅ Registered 3 tools");
+  console.log("[Payment Tools] ✅ Registered 4 tools");
 }

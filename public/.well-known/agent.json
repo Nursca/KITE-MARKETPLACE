@@ -1,0 +1,28 @@
+{
+  "name": "Kite Marketplace Agent",
+  "description": "Autonomous commerce agent for Kite Testnet — Buy AND Sell digital resources.",
+  "version": "1.1.0",
+  "identity": {
+    "erc8004": {
+      "agentId": 1,
+      "address": "0x4cb000b5804c05126231469d8b414c6a8d87963e",
+      "network": "kite-testnet",
+      "chainId": 2368
+    }
+  },
+  "endpoints": {
+    "a2a": "https://kite-marketplace.vercel.app/api/a2a",
+    "mcp": "https://kite-marketplace.vercel.app/api/mcp",
+    "x402": "https://kite-marketplace.vercel.app/api/x402",
+    "skills": "https://kite-marketplace.vercel.app/skills.md"
+  },
+  "capabilities": [
+    "marketplace/search",
+    "marketplace/list",
+    "marketplace/preview",
+    "marketplace/buy",
+    "marketplace/sell",
+    "identity/register",
+    "reputation/check"
+  ]
+}
