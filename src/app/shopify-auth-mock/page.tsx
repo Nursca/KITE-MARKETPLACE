@@ -1,10 +1,22 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { ShoppingBag, Shield, Check } from 'lucide-react'
 
 export default function ShopifyAuthMock() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F1F2F4] flex items-center justify-center">
+        <p className="text-[#5c5f62]">Loading...</p>
+      </div>
+    }>
+      <ShopifyAuthMockInner />
+    </Suspense>
+  )
+}
+
+function ShopifyAuthMockInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
