@@ -9,7 +9,7 @@
 
 export interface Listing {
   id: string;
-  type: 'api' | 'file' | 'article' | 'dataset' | 'code';
+  type: 'api' | 'file' | 'article' | 'dataset' | 'code' | 'shopify';
   name: string;
   description: string;
   priceUsdc: number;
