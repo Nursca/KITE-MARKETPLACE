@@ -73,6 +73,10 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  /* Mobile sidebar backdrop */
+  .sidebar-backdrop {
+    @apply fixed inset-0 bg-background/60 backdrop-blur-sm z-30 transition-opacity duration-300;
+  }
 }
 
 .material-symbols-outlined {

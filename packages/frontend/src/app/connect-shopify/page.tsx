@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Menu, X as XClose } from "lucide-react";
 import { 
   ShoppingBag, 
   Shield,
@@ -13,6 +14,7 @@ export default function ConnectShopifyPage() {
   const [storeName, setStoreName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleInstall = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +43,8 @@ export default function ConnectShopifyPage() {
     <div className="min-h-screen bg-background text-on-background font-body">
       {/* TopNavBar */}
       <nav className="bg-background/85 backdrop-blur-xl sticky top-0 z-50 w-full border-b border-outline-variant/10">
-        <div className="flex justify-between items-center w-full px-6 md:px-12 py-5 max-w-[1440px] mx-auto">
-          <Link href="/" className="text-2xl font-headline italic text-on-background tracking-tighter">
+        <div className="flex justify-between items-center w-full px-4 sm:px-6 md:px-12 py-4 md:py-5 max-w-[1440px] mx-auto">
+          <Link href="/" className="text-xl sm:text-2xl font-headline italic text-on-background tracking-tighter">
             KITE MARKETPLACE
           </Link>
           <div className="hidden md:flex gap-10 items-center">
@@ -56,24 +58,38 @@ export default function ConnectShopifyPage() {
               My Stores
             </Link>
           </div>
-          <div className="flex gap-3 items-center">
-            <Link href="/" className="bg-surface-container-highest px-5 py-2 text-[11px] font-label uppercase tracking-widest hover:bg-surface-container-high transition-colors">
+          <div className="flex gap-2 sm:gap-3 items-center">
+            <Link href="/" className="bg-surface-container-highest px-4 sm:px-5 py-2 text-[10px] sm:text-[11px] font-label uppercase tracking-widest hover:bg-surface-container-high transition-colors">
               Back Home
             </Link>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-on-background hover:text-primary transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <XClose className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-outline-variant/10 bg-background/95 backdrop-blur-xl px-4 py-4 space-y-3">
+            <Link href="/#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">How it works</Link>
+            <Link href="/#marketplace" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">Marketplace</Link>
+            <Link href="/stores" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-primary font-bold py-2">My Stores</Link>
+          </div>
+        )}
       </nav>
 
-      <main className="max-w-[1440px] mx-auto px-6 md:px-12 py-16">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 py-10 sm:py-16">
+        <div className="grid lg:grid-cols-2 gap-10 sm:gap-16 items-start">
           {/* Left Side: Form */}
-          <div className="space-y-10">
-            <div className="space-y-4">
+          <div className="space-y-8 sm:space-y-10">
+            <div className="space-y-3 sm:space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold font-label uppercase tracking-widest">
                 <ShoppingBag className="h-3.5 w-3.5" />
                 Shopify Integration
               </div>
-              <h1 className="text-5xl font-headline italic tracking-tight">Connect your Store</h1>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-headline italic tracking-tight">Connect your Store</h1>
               <p className="text-on-surface-variant text-lg max-w-md">
                 Enable your products to be discovered and purchased by autonomous AI agents on the Kite Network.
               </p>

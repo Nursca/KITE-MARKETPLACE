@@ -6,7 +6,7 @@ import { formatUnits, erc20Abi } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Lock, Unlock, Zap, Database, Code, FileText, Layers, TrendingUp, ExternalLink, Plus, ShoppingBag, Shield } from 'lucide-react'
+import { Lock, Unlock, Zap, Database, Code, FileText, Layers, TrendingUp, ExternalLink, Plus, ShoppingBag, Shield, Menu, X as XIcon } from 'lucide-react'
 
 const USDC_ADDRESS = '0x534b2f3A21130d7a60830c2Df862319e593943A3'
 
@@ -209,6 +209,7 @@ export function ChatUI() {
   const [passport, setPassport] = useState<any | null>(null)
   const [isRegistering, setIsRegistering] = useState(false)
   const [activeView, setActiveView] = useState<'chat' | 'discovery' | 'merchant' | 'identity'>('chat')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Discovery + Merchant data
   const [listings, setListings] = useState<Listing[]>([])
@@ -434,14 +435,24 @@ export function ChatUI() {
 
   return (
     <div className={`font-body text-on-surface min-h-screen flex flex-col bg-background ${isOverlayOpen ? 'overflow-hidden' : ''}`}>
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div className="md:hidden sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 h-screen w-64 bg-surface-container-low border-r border-outline-variant/20 z-40 flex flex-col p-6 space-y-6 transition-all duration-300 ${isOverlayOpen ? 'blur-sm pointer-events-none' : ''}`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm">M</div>
-          <div>
-            <h2 className="font-headline text-on-surface leading-none">KIMA</h2>
-            <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-0.5">Kite AI Agent</p>
+      <aside className={`fixed left-0 top-0 h-screen w-64 bg-surface-container-low border-r border-outline-variant/20 z-40 flex flex-col p-6 space-y-6 transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${isOverlayOpen ? 'blur-sm pointer-events-none' : ''}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm">M</div>
+            <div>
+              <h2 className="font-headline text-on-surface leading-none">KIMA</h2>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest mt-0.5">Kite AI Agent</p>
+            </div>
           </div>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 text-on-surface-variant hover:text-primary transition-colors">
+            <XIcon className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex-1 flex flex-col space-y-1">
@@ -451,7 +462,7 @@ export function ChatUI() {
             { key: 'merchant', icon: 'storefront', label: 'Merchant Hub' },
             { key: 'identity', icon: 'fingerprint', label: 'Identity' },
           ] as const).map(v => (
-            <button key={v.key} onClick={() => setActiveView(v.key)}
+            <button key={v.key} onClick={() => { setActiveView(v.key); setSidebarOpen(false) }}
               className={`flex items-center gap-3 p-3 font-label text-sm rounded-lg transition-all text-left ${activeView === v.key ? 'text-primary bg-surface-container-high' : 'text-on-surface opacity-60 hover:bg-surface-container-high hover:text-primary'}`}>
               <span className="material-symbols-outlined text-xl">{v.icon}</span>
               <span>{v.label}</span>
@@ -471,7 +482,7 @@ export function ChatUI() {
             { label: 'Sell content', msg: 'Help me create a listing to sell my API access for 0.50 USDC' },
             { label: 'My stats', msg: 'Show me the marketplace stats' },
           ].map(q => (
-            <button key={q.label} onClick={() => { setActiveView('chat'); handleSubmit(undefined, q.msg) }}
+            <button key={q.label} onClick={() => { setActiveView('chat'); setSidebarOpen(false); handleSubmit(undefined, q.msg) }}
               className="w-full text-left px-3 py-2 text-[11px] rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface">
               {q.label}
             </button>
@@ -504,18 +515,21 @@ export function ChatUI() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <header className={`fixed top-0 right-0 left-64 z-50 flex justify-between items-center px-8 py-4 bg-background/70 backdrop-blur-xl border-b border-outline-variant/10 transition-all ${isOverlayOpen ? 'blur-sm pointer-events-none' : ''}`}>
+      <div className="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+        <header className={`fixed top-0 right-0 left-0 md:left-64 z-30 flex justify-between items-center px-4 sm:px-8 py-3 sm:py-4 bg-background/70 backdrop-blur-xl border-b border-outline-variant/10 transition-all ${isOverlayOpen ? 'blur-sm pointer-events-none' : ''}`}>
           <div className="flex items-center gap-3">
-            <span className="text-xl font-headline italic">Kite Marketplace</span>
+            <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1 text-on-surface-variant hover:text-primary transition-colors mr-1">
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="text-lg sm:text-xl font-headline italic">Kite Marketplace</span>
             {marketStats && (
-              <span className="hidden md:flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest text-on-surface-variant opacity-60">
+              <span className="hidden lg:flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest text-on-surface-variant opacity-60">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
                 {marketStats.totalListings} listings · ${marketStats.totalVolumeUsdc.toFixed(2)} vol
               </span>
             )}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/.well-known/agent.json" target="_blank" className="text-[10px] font-label uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity hidden md:block">A2A Card</Link>
             <button onClick={() => setIsCartOpen(true)} className="relative">
               <span className="material-symbols-outlined text-on-surface opacity-70 hover:text-primary transition-colors">shopping_bag</span>
@@ -524,20 +538,20 @@ export function ChatUI() {
           </div>
         </header>
 
-        <main className={`flex-grow pt-16 flex h-screen overflow-hidden transition-all ${isOverlayOpen ? 'blur-md pointer-events-none' : ''}`}>
+        <main className={`flex-grow pt-14 sm:pt-16 flex h-screen overflow-hidden transition-all ${isOverlayOpen ? 'blur-md pointer-events-none' : ''}`}>
 
           {/* ── Chat view ── */}
           {activeView === 'chat' && (
             <>
-              <section className="w-[55%] flex flex-col border-r border-outline-variant/10 bg-surface-container-low p-8 justify-end">
-                <div ref={scrollRef} className="flex-grow overflow-y-auto scrollbar-hide space-y-6 mb-6">
+              <section className="w-full lg:w-[55%] flex flex-col border-r-0 lg:border-r border-outline-variant/10 bg-surface-container-low p-4 sm:p-6 lg:p-8 justify-end">
+                <div ref={scrollRef} className="flex-grow overflow-y-auto scrollbar-hide space-y-4 sm:space-y-6 mb-4 sm:mb-6">
                   {messages.map((msg, i) => {
                     const extMsg = msg as ExtendedMessage
                     const content = msg.parts.filter(p => p.type === 'text').map(p => (p.type === 'text' ? p.text : '')).join('')
                     if (!content && msg.role === 'assistant') return null
                     return (
                       <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-primary text-on-primary px-5 py-3.5 rounded-xl' : 'bg-surface-container-high px-5 py-4 rounded-xl'}`}>
+                        <div className={`max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'bg-primary text-on-primary px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl' : 'bg-surface-container-high px-4 sm:px-5 py-3 sm:py-4 rounded-xl'}`}>
                           {msg.role === 'assistant' && <p className="font-headline italic text-primary mb-1.5 text-sm">KIMA</p>}
                           <p className={`text-sm ${msg.role === 'user' ? 'font-medium leading-relaxed' : 'text-on-surface-variant leading-relaxed'}`}>{content}</p>
                           {msg.role === 'assistant' && extMsg.toolInvocations?.map((inv, j) => (
@@ -555,7 +569,7 @@ export function ChatUI() {
                 </div>
                 <form onSubmit={handleSubmit} className="w-full">
                   <div className="relative flex items-center">
-                    <input className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary py-3.5 pl-5 pr-14 text-sm rounded-xl" placeholder="Ask KIMA to buy, sell, or browse..." value={input} onChange={e => setInput(e.target.value)} disabled={isLoading} />
+                    <input className="w-full bg-surface-container-high border-none focus:ring-1 focus:ring-primary py-3 sm:py-3.5 pl-4 sm:pl-5 pr-12 sm:pr-14 text-sm rounded-xl" placeholder="Ask KIMA to buy, sell, or browse..." value={input} onChange={e => setInput(e.target.value)} disabled={isLoading} />
                     <button disabled={isLoading || !input.trim()} className="absolute right-2 p-2 bg-primary text-on-primary hover:opacity-90 transition-opacity rounded-lg disabled:opacity-50">
                       <span className="material-symbols-outlined text-sm">arrow_upward</span>
                     </button>
@@ -563,9 +577,9 @@ export function ChatUI() {
                 </form>
               </section>
 
-              <section className="w-[45%] bg-surface overflow-y-auto scrollbar-hide p-8">
-                <h2 className="font-headline text-3xl italic mb-6">{isSearching ? 'Searching...' : 'Results'}</h2>
-                <div className="grid gap-6">
+              <section className="hidden lg:block w-[45%] bg-surface overflow-y-auto scrollbar-hide p-6 lg:p-8">
+                <h2 className="font-headline text-2xl lg:text-3xl italic mb-6">{isSearching ? 'Searching...' : 'Results'}</h2>
+                <div className="grid gap-4 lg:gap-6">
                   {isSearching ? Array(2).fill(0).map((_, i) => <ProductCardSkeleton key={i} />) :
                     currentProducts.length > 0 ? currentProducts.map(p => (
                       <ProductCard key={p.id} product={p} onAddToCart={() => addItem(p, 1)} />
@@ -584,24 +598,24 @@ export function ChatUI() {
 
           {/* ── Discovery view ── */}
           {activeView === 'discovery' && (
-            <section className="w-full bg-surface overflow-y-auto p-10">
-              <div className="max-w-5xl mx-auto space-y-8">
-                <div className="flex items-end justify-between">
+            <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-10">
+              <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                   <div>
-                    <h2 className="font-headline text-4xl italic">Resource Explorer</h2>
+                    <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl italic">Resource Explorer</h2>
                     <p className="text-sm text-on-surface-variant opacity-60 mt-1">All paywalled listings — pay with x402 USDC on Kite Testnet</p>
                   </div>
                   {marketStats && (
-                    <div className="flex gap-6 text-right">
-                      <div><p className="text-primary font-bold text-xl">{marketStats.totalListings}</p><p className="text-[10px] uppercase tracking-widest opacity-50">Listings</p></div>
-                      <div><p className="text-primary font-bold text-xl">${marketStats.totalVolumeUsdc.toFixed(2)}</p><p className="text-[10px] uppercase tracking-widest opacity-50">Volume</p></div>
+                    <div className="flex gap-4 sm:gap-6 text-right">
+                      <div><p className="text-primary font-bold text-lg sm:text-xl">{marketStats.totalListings}</p><p className="text-[10px] uppercase tracking-widest opacity-50">Listings</p></div>
+                      <div><p className="text-primary font-bold text-lg sm:text-xl">${marketStats.totalVolumeUsdc.toFixed(2)}</p><p className="text-[10px] uppercase tracking-widest opacity-50">Volume</p></div>
                     </div>
                   )}
                 </div>
                 {listingsLoading ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">{[1,2,3].map(i => <div key={i} className="h-48 rounded-xl bg-surface-container animate-pulse" />)}</div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">{[1,2,3].map(i => <div key={i} className="h-48 rounded-xl bg-surface-container animate-pulse" />)}</div>
                 ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     {listings.map(l => <ListingCard key={l.id} listing={l} onBuy={handleBuyListing} />)}
                     <button onClick={() => setActiveView('merchant')}
                       className="p-5 rounded-2xl border-2 border-dashed border-outline-variant/30 hover:border-primary/40 transition-colors flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:text-primary">
@@ -646,7 +660,7 @@ export function ChatUI() {
       {isOverlayOpen && <div className="fixed inset-0 bg-background/40 backdrop-blur-[16px] z-[60]" onClick={() => { if (checkoutStatus !== 'processing') { setIsCartOpen(false); setIsCheckoutOpen(false) } }} />}
 
       {/* Cart drawer */}
-      <aside className={`fixed right-0 top-0 h-full w-[360px] bg-surface-container-lowest shadow-2xl z-[70] flex flex-col border-l border-outline-variant/20 transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <aside className={`fixed right-0 top-0 h-full w-full sm:w-[360px] bg-surface-container-lowest shadow-2xl z-[70] flex flex-col border-l border-outline-variant/20 transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-6 flex justify-between items-center border-b border-outline-variant/10">
           <h2 className="font-headline text-2xl italic">Cart</h2>
           <button onClick={() => setIsCartOpen(false)} className="material-symbols-outlined">close</button>
@@ -796,31 +810,31 @@ function MerchantHub({ listings, myListings, myEarnings, address, creating, crea
 
   // ── List view ─────────────────────────────────────────────────────────────
   if (step === 'list') return (
-    <section className="w-full bg-surface overflow-y-auto p-8">
-      <div className="max-w-5xl mx-auto space-y-7">
-        <div className="flex items-end justify-between">
+    <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-5xl mx-auto space-y-5 sm:space-y-7">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h2 className="font-headline text-4xl italic">Merchant Hub</h2>
+            <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl italic">Merchant Hub</h2>
             <p className="text-sm text-on-surface-variant opacity-60 mt-1">Create and manage paywalled listings — earn USDC from every purchase</p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/stores" className="flex items-center gap-2 bg-surface-container-highest px-5 py-2.5 text-xs font-label uppercase tracking-widest hover:bg-surface-container-high transition-colors">
+          <div className="flex gap-2 sm:gap-3">
+            <Link href="/stores" className="flex items-center gap-2 bg-surface-container-highest px-3 sm:px-5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-label uppercase tracking-widest hover:bg-surface-container-high transition-colors">
               <ShoppingBag className="h-4 w-4" /> My Stores
             </Link>
-            <button onClick={() => setStep('pick-type')} className="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity">
+            <button onClick={() => setStep('pick-type')} className="flex items-center gap-2 bg-primary text-on-primary px-3 sm:px-5 py-2 sm:py-2.5 text-[10px] sm:text-xs font-label uppercase tracking-widest hover:opacity-90 transition-opacity">
               <Plus className="h-4 w-4" /> New Listing
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { label: 'My listings', val: myListings.length },
             { label: 'Total earned', val: `$${myEarnings.toFixed(2)}` },
             { label: 'Total sales', val: totalSales },
           ].map(s => (
-            <div key={s.label} className="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20">
-              <p className="text-2xl font-headline italic text-primary">{s.val}</p>
+            <div key={s.label} className="p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+              <p className="text-xl sm:text-2xl font-headline italic text-primary">{s.val}</p>
               <p className="text-[10px] uppercase tracking-widest opacity-50 mt-1">{s.label}</p>
             </div>
           ))}
@@ -894,20 +908,20 @@ function MerchantHub({ listings, myListings, myEarnings, address, creating, crea
 
   // ── Step 1: Pick type ─────────────────────────────────────────────────────
   if (step === 'pick-type') return (
-    <section className="w-full bg-surface overflow-y-auto p-8">
-      <div className="max-w-4xl mx-auto space-y-7">
+    <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-7">
         <button onClick={() => setStep('list')} className="flex items-center gap-2 text-xs text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-all font-label uppercase tracking-widest">
           <span className="text-base leading-none">←</span> Back to listings
         </button>
         <div>
-          <h2 className="font-headline text-4xl italic">New Listing</h2>
+          <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl italic">New Listing</h2>
           <p className="text-sm text-on-surface-variant opacity-60 mt-1">Choose what you want to sell</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {LISTING_TYPES_CONFIG.map(opt => (
             <button key={opt.type} onClick={() => handlePickType(opt.type)}
-              className="group p-6 rounded-2xl border border-outline-variant/20 text-left transition-all hover:border-primary/50 hover:bg-primary/[0.03] hover:scale-[1.02] hover:shadow-lg">
-              <div className="text-primary mb-4 group-hover:scale-110 transition-transform">
+              className="group p-5 sm:p-6 rounded-2xl border border-outline-variant/20 text-left transition-all hover:border-primary/50 hover:bg-primary/[0.03] hover:scale-[1.02] hover:shadow-lg">
+              <div className="text-primary mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
                 {TYPE_ICON_MAP[opt.type]}
               </div>
               <h3 className="font-medium text-sm mb-1">{opt.title}</h3>
@@ -922,8 +936,8 @@ function MerchantHub({ listings, myListings, myEarnings, address, creating, crea
 
   // ── Step 2: Details form ──────────────────────────────────────────────────
   if (step === 'details' && typeInfo) return (
-    <section className="w-full bg-surface overflow-y-auto p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6">
         <button onClick={() => setStep('pick-type')} className="flex items-center gap-2 text-xs text-on-surface-variant opacity-60 hover:opacity-100 hover:text-primary transition-all font-label uppercase tracking-widest">
           <span className="text-base leading-none">←</span> Back
         </button>

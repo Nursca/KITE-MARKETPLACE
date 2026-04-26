@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAccount } from 'wagmi'
 import { ChatUI } from "@/components/ChatUI";
 import { useAppKit } from '@reown/appkit/react'
+import { Menu, X } from "lucide-react";
 import {
   Zap,
   Bot,
@@ -52,7 +53,7 @@ function LiveStatsBanner({ stats }: { stats: Stats | null }) {
   if (!stats) return null;
   return (
     <div className="border-b border-outline-variant/10 bg-surface-container-low py-2">
-      <div className="max-w-[1440px] mx-auto px-6 flex items-center justify-center gap-10 text-[11px] font-label uppercase tracking-widest">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 sm:gap-10 text-[11px] font-label uppercase tracking-widest">
         <span className="flex items-center gap-1.5 text-on-surface-variant">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
           Live on Kite Testnet
@@ -116,6 +117,7 @@ export default function Home() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [loadingListings, setLoadingListings] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleConnect = () => open()
 
@@ -145,8 +147,8 @@ export default function Home() {
 
       {/* TopNavBar */}
       <nav className="bg-background/85 backdrop-blur-xl sticky top-0 z-50 w-full border-b border-outline-variant/10">
-        <div className="flex justify-between items-center w-full px-6 md:px-12 py-5 max-w-[1440px] mx-auto">
-          <div className="text-2xl font-headline italic text-on-background tracking-tighter">
+        <div className="flex justify-between items-center w-full px-4 sm:px-6 md:px-12 py-4 md:py-5 max-w-[1440px] mx-auto">
+          <div className="text-xl sm:text-2xl font-headline italic text-on-background tracking-tighter">
             KITE MARKETPLACE
           </div>
           <div className="hidden md:flex gap-10 items-center">
@@ -166,33 +168,67 @@ export default function Home() {
               GitHub
             </Link>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-2 sm:gap-3 items-center">
             <button
               onClick={handleConnect}
-              className="bg-surface-container-highest px-5 py-2 text-[11px] font-label uppercase tracking-widest hover:bg-surface-container-high transition-colors"
+              className="hidden sm:block bg-surface-container-highest px-5 py-2 text-[11px] font-label uppercase tracking-widest hover:bg-surface-container-high transition-colors"
             >
               Agent Passport
             </button>
             <button
               onClick={handleConnect}
-              className="bg-primary text-on-primary px-5 py-2 text-[11px] font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
+              className="bg-primary text-on-primary px-4 sm:px-5 py-2 text-[10px] sm:text-[11px] font-label uppercase tracking-widest hover:opacity-90 transition-opacity"
             >
               Launch Agent
             </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-on-background hover:text-primary transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-outline-variant/10 bg-background/95 backdrop-blur-xl px-4 py-4 space-y-3">
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-primary font-bold py-2">
+              How it works
+            </a>
+            <a href="#marketplace" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
+              Marketplace
+            </a>
+            <Link href="/connect-shopify" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
+              Connect Shopify
+            </Link>
+            <Link href="/stores" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
+              My Stores
+            </Link>
+            <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
+              GitHub
+            </Link>
+            <button
+              onClick={() => { setMobileMenuOpen(false); handleConnect() }}
+              className="sm:hidden block w-full text-left font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2"
+            >
+              Agent Passport
+            </button>
+          </div>
+        )}
       </nav>
 
       <main>
         {/* Hero */}
-        <section className="relative pt-28 pb-20 px-6 md:px-12 max-w-[1440px] mx-auto overflow-hidden">
+        <section className="relative pt-16 sm:pt-20 md:pt-28 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 md:px-12 max-w-[1440px] mx-auto overflow-hidden">
           <div className="radial-glow absolute inset-0 -z-10" />
-          <div className="max-w-4xl mx-auto text-center space-y-7 mb-16">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-label uppercase tracking-widest">
+          <div className="max-w-4xl mx-auto text-center space-y-5 sm:space-y-7 mb-10 sm:mb-16">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-5 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-bold font-label uppercase tracking-widest">
               <Zap className="h-3.5 w-3.5" />
-              Kite AI · x402 Protocol · Autonomous USDC Payments
+              <span className="hidden sm:inline">Kite AI · x402 Protocol · Autonomous USDC Payments</span>
+              <span className="sm:hidden">Kite AI · x402 · USDC</span>
             </div>
-            <h1 className="text-[60px] md:text-[80px] leading-[0.9] font-headline font-medium tracking-tight">
+            <h1 className="text-[36px] sm:text-[48px] md:text-[60px] lg:text-[80px] leading-[0.9] font-headline font-medium tracking-tight">
               Commerce for Humans<br />
               <span className="text-primary italic">&amp; AI Agents.</span>
             </h1>
@@ -222,28 +258,28 @@ export default function Home() {
           </div>
 
           {/* Demo mockup */}
-          <div className="bg-surface-container-lowest border border-outline-variant/30 shadow-2xl p-2 rounded-xl">
-            <div className="bg-surface-container-low flex h-[500px] flex-col md:flex-row rounded-lg overflow-hidden">
+          <div className="bg-surface-container-lowest border border-outline-variant/30 shadow-2xl p-1.5 sm:p-2 rounded-xl">
+            <div className="bg-surface-container-low flex h-[300px] sm:h-[400px] md:h-[500px] flex-col md:flex-row rounded-lg overflow-hidden">
               <div className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-outline-variant/20">
-                <div className="p-5 flex-1 overflow-y-auto space-y-4 text-sm">
-                  <div className="bg-surface-container-highest p-4 rounded-lg">
+                <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-3 sm:space-y-4 text-xs sm:text-sm">
+                  <div className="bg-surface-container-highest p-3 sm:p-4 rounded-lg">
                     Show me datasets under 1 USDC and create a listing for my AI market report.
                   </div>
-                  <div className="bg-primary/5 border border-primary/10 p-4 italic rounded-lg text-on-surface-variant">
+                  <div className="bg-primary/5 border border-primary/10 p-3 sm:p-4 italic rounded-lg text-on-surface-variant">
                     Found 2 listings under 1 USDC on Kite Testnet. Creating your listing now...
                   </div>
-                  <div className="bg-surface-container-highest p-4 rounded-lg font-mono text-xs">
+                  <div className="bg-surface-container-highest p-3 sm:p-4 rounded-lg font-mono text-[10px] sm:text-xs">
                     <div className="text-green-500 mb-1">✓ Listing created</div>
                     <div>id: lst_1234_abc</div>
                     <div>price: 1.00 USDC</div>
-                    <div className="text-primary">x402Url: /api/listings/lst_1234_abc/content</div>
+                    <div className="text-primary break-all">x402Url: /api/listings/lst_1234_abc/content</div>
                   </div>
                 </div>
-                <div className="p-4 border-t border-outline-variant/20">
-                  <div className="bg-surface-container-lowest p-2.5 text-xs opacity-40 rounded-md">Type your request...</div>
+                <div className="p-3 sm:p-4 border-t border-outline-variant/20">
+                  <div className="bg-surface-container-lowest p-2 sm:p-2.5 text-xs opacity-40 rounded-md">Type your request...</div>
                 </div>
               </div>
-              <div className="w-full md:w-1/2 p-5 overflow-y-auto bg-surface-container-lowest space-y-4">
+              <div className="w-full md:w-1/2 p-3 sm:p-5 overflow-y-auto bg-surface-container-lowest space-y-3 sm:space-y-4 hidden md:block">
                 <p className="text-[10px] font-label uppercase tracking-widest opacity-50 mb-3">Live Listings</p>
                 {loadingListings ? (
                   <div className="space-y-3">
@@ -262,16 +298,16 @@ export default function Home() {
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="py-20 px-6 md:px-12 bg-surface-container-low">
+        <section id="how-it-works" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 bg-surface-container-low">
           <div className="max-w-[1440px] mx-auto">
-            <div className="text-center mb-14 space-y-3">
+            <div className="text-center mb-8 sm:mb-14 space-y-3">
               <p className="text-primary font-label font-bold tracking-widest uppercase text-xs">How It Works</p>
-              <h2 className="text-4xl md:text-5xl font-headline italic">Agents buy. Agents sell.</h2>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-headline italic">Agents buy. Agents sell.</h2>
               <p className="text-on-surface-variant max-w-xl mx-auto text-sm leading-relaxed">
                 The first two-sided agentic economy — every agent is simultaneously a buyer and a potential seller.
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[
                 { n: "01", icon: <Layers className="h-6 w-6" />, title: "Create & List", body: "Agents publish APIs, datasets, articles, or code with a USDC price. Content is hidden behind x402 until payment." },
                 { n: "02", icon: <ExternalLink className="h-6 w-6" />, title: "Discover & Pay", body: "Any agent or human browses the marketplace, previews listings, and pays USDC on Kite Testnet — one HTTP request." },
@@ -291,28 +327,28 @@ export default function Home() {
         </section>
 
         {/* Live Marketplace */}
-        <section id="marketplace" className="py-20 px-6 md:px-12 bg-background">
+        <section id="marketplace" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 bg-background">
           <div className="max-w-[1440px] mx-auto">
-            <div className="flex items-end justify-between mb-10">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10">
               <div className="space-y-2">
                 <p className="text-primary font-label font-bold tracking-widest uppercase text-xs">Live Marketplace</p>
-                <h2 className="text-3xl md:text-4xl font-headline italic">Agent-created listings</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline italic">Agent-created listings</h2>
               </div>
               <button
                 onClick={handleConnect}
-                className="hidden sm:flex items-center gap-2 border border-primary/40 text-primary px-5 py-2.5 text-xs font-label uppercase tracking-widest hover:bg-primary/5 transition-colors"
+                className="hidden sm:flex items-center gap-2 border border-primary/40 text-primary px-5 py-2.5 text-xs font-label uppercase tracking-widest hover:bg-primary/5 transition-colors shrink-0"
               >
                 + Sell your content
               </button>
             </div>
             {loadingListings ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 {[1,2,3].map(i => (
                   <div key={i} className="h-48 rounded-xl bg-surface-container animate-pulse" />
                 ))}
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 {listings.map(l => (
                   <ListingCard key={l.id} listing={l} onBuy={handleConnect} />
                 ))}
@@ -331,13 +367,13 @@ export default function Home() {
         </section>
 
         {/* Protocol Stack */}
-        <section className="py-20 px-6 md:px-12 bg-surface-container-low">
-          <div className="max-w-[1440px] mx-auto text-center space-y-10">
+        <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-12 bg-surface-container-low">
+          <div className="max-w-[1440px] mx-auto text-center space-y-6 sm:space-y-10">
             <div className="space-y-3">
               <p className="text-primary font-label font-bold tracking-widest uppercase text-xs">Protocol Stack</p>
-              <h2 className="text-3xl md:text-5xl font-headline italic">Built on open standards</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-headline italic">Built on open standards</h2>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap items-center justify-center gap-3">
               {[
                 { label: "x402", desc: "HTTP 402 Payments" },
                 { label: "MCP", desc: "Model Context Protocol" },
@@ -356,16 +392,16 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="py-10 px-6 md:px-12 border-t border-outline-variant/10 bg-surface-container-lowest">
-        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-xl font-headline italic tracking-tighter">KITE MARKETPLACE</div>
-          <div className="flex gap-8 text-[11px] font-label uppercase tracking-widest opacity-60">
+      <footer className="py-8 sm:py-10 px-4 sm:px-6 md:px-12 border-t border-outline-variant/10 bg-surface-container-lowest">
+        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
+          <div className="text-lg sm:text-xl font-headline italic tracking-tighter">KITE MARKETPLACE</div>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-[11px] font-label uppercase tracking-widest opacity-60">
             <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" className="hover:text-primary transition-colors">GitHub</Link>
             <Link href="/.well-known/agent.json" target="_blank" className="hover:text-primary transition-colors">Agent Card</Link>
             <Link href="/api/mcp" target="_blank" className="hover:text-primary transition-colors">MCP Server</Link>
             <Link href="/SKILL.md" target="_blank" className="hover:text-primary transition-colors">Skill Docs</Link>
           </div>
-          <p className="text-[11px] font-label uppercase tracking-widest opacity-40">
+          <p className="text-[10px] sm:text-[11px] font-label uppercase tracking-widest opacity-40 text-center">
             Built for Kite AI Hackathon 2026 · Agentic Commerce Track
           </p>
         </div>

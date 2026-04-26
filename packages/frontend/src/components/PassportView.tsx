@@ -23,12 +23,12 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
 
   if (!agentId) {
     return (
-      <section className="w-full bg-surface overflow-y-auto p-10">
-        <div className="max-w-4xl mx-auto text-center space-y-8 py-10">
+      <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-10">
+        <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 py-6 sm:py-10">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary mb-4">
             <Shield className="h-10 w-10" />
           </div>
-          <h2 className="font-headline text-4xl italic">Mint Your Agent Passport</h2>
+          <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl italic">Mint Your Agent Passport</h2>
           <p className="text-on-surface-variant max-w-xl mx-auto leading-relaxed">
             Your Passport is a verifiable on-chain identity for the Kite Agentic Economy. 
             It tracks your trade volume, reputation, and protocol capabilities to build trust with other agents.
@@ -40,7 +40,7 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
           >
             {isRegistering ? 'Minting on Kite Testnet...' : 'Create My On-Chain Passport'}
           </button>
-          <div className="grid md:grid-cols-3 gap-6 pt-10 text-left">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-10 text-left">
             {[
               { icon: <Bot />, title: "Verifiable DID", desc: "did:kite:0x... based identity stored on-chain via ERC-8004." },
               { icon: <TrendingUp />, title: "Trade Tiers", desc: "Level up from Scout to Elite based on your USDC volume." },
@@ -61,12 +61,12 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
   const tier = passport?.tier || 0
 
   return (
-    <section className="w-full bg-surface overflow-y-auto p-10">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-10">
+      <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 sm:gap-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="font-headline text-4xl italic">Agent Passport</h2>
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <h2 className="font-headline text-2xl sm:text-3xl lg:text-4xl italic">Agent Passport</h2>
               <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${TIER_COLORS[tier]}`}>
                 {TIER_NAMES[tier]} Tier
               </span>
@@ -98,11 +98,11 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Passport ID</p>
-                  <p className="text-3xl font-mono font-bold">#{agentId}</p>
+                  <p className="text-xl sm:text-3xl font-mono font-bold break-all">#{agentId}</p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <label className="text-[10px] font-label uppercase tracking-widest opacity-40 block mb-1">Owner Address</label>
                   <p className="text-sm font-mono">{address ? truncateAddress(address) : '—'}</p>

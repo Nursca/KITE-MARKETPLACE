@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Menu, X as XClose } from "lucide-react";
 import { 
   Store, 
   Trash2, 
@@ -37,6 +38,7 @@ interface ShopifyProduct {
 export default function StoresPage() {
   const [stores, setStores] = useState<ShopifyStore[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Import Modal State
   const [importStoreId, setImportStoreId] = useState<string | null>(null);
@@ -139,8 +141,8 @@ export default function StoresPage() {
       
       {/* TopNavBar */}
       <nav className="bg-background/85 backdrop-blur-xl sticky top-0 z-50 w-full border-b border-outline-variant/10">
-        <div className="flex justify-between items-center w-full px-6 md:px-12 py-5 max-w-[1440px] mx-auto">
-          <Link href="/" className="text-2xl font-headline italic text-on-background tracking-tighter">
+        <div className="flex justify-between items-center w-full px-4 sm:px-6 md:px-12 py-4 md:py-5 max-w-[1440px] mx-auto">
+          <Link href="/" className="text-xl sm:text-2xl font-headline italic text-on-background tracking-tighter">
             KITE MARKETPLACE
           </Link>
           <div className="hidden md:flex gap-10 items-center">
@@ -154,22 +156,36 @@ export default function StoresPage() {
               My Stores
             </Link>
           </div>
-          <div className="flex gap-3 items-center">
-            <Link href="/connect-shopify" className="bg-primary text-on-primary px-5 py-2 text-[11px] font-label uppercase tracking-widest hover:opacity-90 transition-opacity">
+          <div className="flex gap-2 sm:gap-3 items-center">
+            <Link href="/connect-shopify" className="bg-primary text-on-primary px-4 sm:px-5 py-2 text-[10px] sm:text-[11px] font-label uppercase tracking-widest hover:opacity-90 transition-opacity">
               + Connect Store
             </Link>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-on-background hover:text-primary transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <XClose className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-outline-variant/10 bg-background/95 backdrop-blur-xl px-4 py-4 space-y-3">
+            <Link href="/#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">How it works</Link>
+            <Link href="/#marketplace" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">Marketplace</Link>
+            <Link href="/stores" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-primary font-bold py-2">My Stores</Link>
+          </div>
+        )}
       </nav>
 
-      <main className="max-w-[1440px] mx-auto px-6 md:px-12 py-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 py-8 sm:py-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-primary font-label font-bold uppercase tracking-widest text-xs">
               <ShoppingBag className="h-3.5 w-3.5" />
               Connected Integrations
             </div>
-            <h1 className="text-4xl md:text-5xl font-headline italic">Your Shopify Stores</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline italic">Your Shopify Stores</h1>
             <p className="text-on-surface-variant max-w-xl text-sm leading-relaxed">
               Manage your connected Shopify stores and monitor agentic commerce performance.
             </p>
