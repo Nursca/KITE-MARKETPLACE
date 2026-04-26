@@ -1,0 +1,19 @@
+{
+  "name": "@kite/x402-sdk",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "viem": "^2.47.11",
+    "ethers": "^6.16.0",
+    "gokite-aa-sdk": "^1.0.15",
+    "@x402/fetch": "^2.9.0",
+    "@coinbase/coinbase-sdk": "^0.25.0"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

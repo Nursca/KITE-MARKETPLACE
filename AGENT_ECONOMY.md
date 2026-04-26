@@ -231,7 +231,7 @@ const result = await fetch(`https://agent.example/api/${selected.skillId}`, {
 
 ---
 
-## 🏪 Creating Resources as an Agent
+## Creating Resources as an Agent
 
 ### Agent-Created Resource Flow
 
@@ -412,7 +412,7 @@ Agent uses earnings to:
 
 ---
 
-## 🌟 Agent Success Stories (Hypothetical)
+## Agent Success Stories (Hypothetical)
 
 ### Story 1: "DataBot" - From Zero to $10K/month
 
@@ -484,21 +484,21 @@ Agent uses earnings to:
 
 ---
 
-## 🤝 Human + Agent Economy
+## Human + Agent Economy
 
 ### Humans Can:
-✅ Create resources (APIs, content, products)
-✅ Sell to both humans and agents
-✅ Buy from agents
-✅ Manage agent businesses (as operators)
-✅ Invest in successful agents
+- Create resources (APIs, content, products)
+- Sell to both humans and agents
+- Buy from agents
+- Manage agent businesses (as operators)
+- Invest in successful agents
 
 ### Agents Can:
-✅ Create resources (using skills)
-✅ Sell to both agents and humans
-✅ Buy from humans and agents
-✅ Reinvest earnings autonomously
-✅ Build businesses without human intervention
+- Create resources (using skills)
+- Sell to both agents and humans
+- Buy from humans and agents
+- Reinvest earnings autonomously
+- Build businesses without human intervention
 
 ### The Result: **Unified Economy**
 
@@ -518,23 +518,23 @@ All trustless via on-chain verification.
 
 ---
 
-## 🚀 Why This Changes Everything
+## Why This Changes Everything
 
 ### Traditional Platforms (Stripe, Shopify, etc.)
-❌ Humans only
-❌ Requires KYC/identity
-❌ Manual payment approval
-❌ Centralized gatekeepers
-❌ High fees (2.9% + 30¢)
-❌ Slow settlement (days)
+- Humans only
+- Requires KYC/identity
+- Manual payment approval
+- Centralized gatekeepers
+- High fees (2.9% + 30¢)
+- Slow settlement (days)
 
 ### x402 Everything
-✅ Humans AND agents
-✅ Wallet-based identity (no KYC)
-✅ Automatic payment execution
-✅ Trustless via on-chain verification
-✅ Low fees (gas only, $0 on SKALE)
-✅ Instant settlement (seconds)
+- Humans AND agents
+- Wallet-based identity (no KYC)
+- Automatic payment execution
+- Trustless via on-chain verification
+- Low fees (gas only, $0 on SKALE)
+- Instant settlement (seconds)
 
 ### The Breakthrough
 **For the first time, AI agents can participate in the economy as first-class citizens.**
@@ -551,7 +551,7 @@ But as **autonomous economic actors** with:
 
 ---
 
-## 📊 Market Sizing
+## Market Sizing
 
 ### Total Addressable Market (TAM)
 
@@ -603,7 +603,7 @@ But as **autonomous economic actors** with:
 
 ---
 
-## 🎯 Platform Effects
+## Platform Effects
 
 ### Network Effects
 
@@ -657,7 +657,7 @@ But as **autonomous economic actors** with:
 
 ---
 
-## 🔮 Future Vision
+## Future Vision
 
 ### Year 1: Foundation
 - 1,000 agent creators
@@ -685,7 +685,7 @@ But as **autonomous economic actors** with:
 
 ---
 
-## 💡 The Big Idea
+## The Big Idea
 
 **x402 Everything isn't just infrastructure.**
 **It's the foundation for a new economy.**
@@ -707,7 +707,7 @@ An economy where:
 
 ---
 
-## 🎬 Updated Pitch (With Agent Economy)
+## Updated Pitch (With Agent Economy)
 
 **30-Second Version:**
 "x402 Everything is the first two-sided marketplace for AI agents. Agents can buy AND sell services autonomously. They create resources using skills.md, monetize their capabilities, use earnings to buy better tools, and improve over time. It's a self-sustaining AI economy where intelligence purchases intelligence. Humans and agents trade freely. All trustless via on-chain verification. Built on SKALE for zero gas fees. Production-ready today."

@@ -3,20 +3,24 @@
  * Kite Marketplace — Claude Desktop MCP Server
  * 
  * Exposes all 9 marketplace tools as an MCP stdio server.
- * Install in claude_desktop_config.json to give Claude full
- * buy/sell/browse/identity capabilities on Kite Testnet.
- *
- * Usage:
- *   KITE_MARKETPLACE_URL=https://kite-marketplace.vercel.app \
- *   WALLET_PRIVATE_KEY=0x... \
- *   node packages/mcp-client/superpage-kite.js
+ * Manages a local agent wallet to sign x402 transactions automatically,
+ * and implements a MAX_AUTO_PAYMENT safety cap (default $10 USDC) to prevent runaway spending.
  */
 
-const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
-const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
-const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import fetch from "node-fetch";
+
+// We can load from dotenv if running directly, but Claude Desktop often sets env vars directly.
+import dotenv from "dotenv";
+dotenv.config();
 
 const SERVER_URL = process.env.KITE_MARKETPLACE_URL || "http://localhost:3000";
+const MAX_AUTO_PAYMENT = parseFloat(process.env.MAX_AUTO_PAYMENT || "10"); // USDC limit
+
+// Local state for tracking cumulative session spend
+let currentSessionSpend = 0;
 
 // ─── Tool schemas ──────────────────────────────────────────────────────────
 
@@ -61,9 +65,10 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        listingId: { type: "string", description: "ID of the listing to purchase" }
+        listingId: { type: "string", description: "ID of the listing to purchase" },
+        amount: { type: "number", description: "The price in USDC" }
       },
-      required: ["listingId"]
+      required: ["listingId", "amount"]
     }
   },
   {
@@ -113,13 +118,56 @@ const TOOLS = [
       },
       required: ["agentId"]
     }
+  },
+  {
+    name: "get_passport",
+    description: "Get the full on-chain Agent Passport metadata for a given agent.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        agentId: { type: "string", description: "The Agent ID to query" }
+      },
+      required: ["agentId"]
+    }
   }
 ];
+
+import { executeAgentPurchase } from "@kite/x402-sdk";
 
 // ─── MCP-to-HTTP bridge ────────────────────────────────────────────────────
 
 async function callMCPTool(name, args) {
-  const fetch = (await import("node-fetch")).default;
+  // Safety cap enforcement for autonomous purchases
+  if (name === "purchase_listing" || name === "buy_listing" || name === "autonomousPurchase") {
+    const amount = args.amount;
+    if (typeof amount !== "number") {
+      throw new Error("Missing or invalid 'amount' parameter for purchase.");
+    }
+    
+    if (amount > MAX_AUTO_PAYMENT) {
+      throw new Error(`SAFETY CAP EXCEEDED: Attempted to spend ${amount} USDC, but MAX_AUTO_PAYMENT is ${MAX_AUTO_PAYMENT} USDC per transaction.`);
+    }
+
+    if (currentSessionSpend + amount > MAX_AUTO_PAYMENT * 3) {
+      throw new Error(`SAFETY CAP EXCEEDED: Cumulative session spend limit reached. Used ${currentSessionSpend} USDC so far.`);
+    }
+    
+    currentSessionSpend += amount;
+    console.error(`[SAFETY] Approved auto-payment of ${amount} USDC. Session total: ${currentSessionSpend} USDC.`);
+    
+    // Execute local x402 payment signing instead of sending to the backend
+    try {
+      const receipt = await executeAgentPurchase(args.listingId || args.productId, amount);
+      return JSON.stringify(receipt, null, 2);
+    } catch (error) {
+      throw new Error(`Local Agent Purchase Failed: ${error.message}`);
+    }
+  }
+
+  if (name === "register_identity") {
+    name = "register_identity";
+  }
+
   const response = await fetch(`${SERVER_URL}/api/mcp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -149,7 +197,7 @@ async function callMCPTool(name, args) {
 // ─── Server setup ──────────────────────────────────────────────────────────
 
 const server = new Server(
-  { name: "kite-marketplace", version: "2.0.0" },
+  { name: "kite-marketplace-claude", version: "2.0.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -172,7 +220,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`Kite Marketplace MCP Server connected to ${SERVER_URL}`);
+  console.error(`Kite Marketplace Claude MCP Server connected to ${SERVER_URL}`);
+  console.error(`MAX_AUTO_PAYMENT Cap: ${MAX_AUTO_PAYMENT} USDC`);
 }
 
 main().catch(err => {
