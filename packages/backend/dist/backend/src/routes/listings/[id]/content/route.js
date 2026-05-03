@@ -19,7 +19,7 @@ const payTo = (process.env.PAYMENT_RECIPIENT_ADDRESS ||
  */
 async function GET(req, context) {
     const { id } = await context.params;
-    const listing = listing_store_1.listingStore.get(id);
+    const listing = await listing_store_1.listingStore.get(id);
     if (!listing) {
         return server_1.NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
@@ -77,7 +77,7 @@ async function GET(req, context) {
     const buyerAddress = req.headers.get("x-buyer-address") ||
         req.headers.get("X-Buyer-Address") ||
         "0xunknown";
-    listing_store_1.listingStore.recordSale(listing.id, buyerAddress, txHash);
+    await listing_store_1.listingStore.recordSale(listing.id, buyerAddress, txHash);
     return server_1.NextResponse.json({
         success: true,
         listing: {

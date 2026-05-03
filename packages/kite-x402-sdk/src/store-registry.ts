@@ -5,6 +5,9 @@
  * In a production app, this would be a database.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 export interface ShopifyStore {
   id: string;
   shopUrl: string;
@@ -18,17 +21,80 @@ export interface ShopifyStore {
 
 class StoreRegistry {
   private stores: Map<string, ShopifyStore> = new Map();
+  private readonly dataFile: string;
 
   constructor() {
-    // Seed with a demo store if needed
-    if (process.env.NODE_ENV === 'development') {
-      this.add({
-        id: "shop_demo_1",
-        shopUrl: "kite-marketplace-demo.myshopify.com",
-        name: "Kite Demo Store",
-        description: "Official merchandise for Kite developers.",
-        isConnected: true,
-      });
+    // If we are in the browser or don't have Node.js environment, we don't use the file system
+    const isBrowser = typeof globalThis !== 'undefined' && 'window' in globalThis;
+    const hasProcess = typeof process !== 'undefined' && typeof process.cwd === 'function';
+    const hasPath = path && typeof path.join === 'function';
+    const hasFs = fs && (typeof fs.existsSync === 'function' || typeof (fs as any).existsSync === 'function');
+
+    if (isBrowser || !hasProcess || !hasPath || !hasFs) {
+      this.dataFile = '';
+      return;
+    }
+
+    // Try to find the root data directory
+    // If we are in packages/kite-x402-sdk/dist or src, we go up to project root
+    try {
+      const cwd = process.cwd();
+      const possiblePaths = [
+        path.join(cwd, 'data', 'stores.json'),
+        path.join(cwd, '..', '..', 'data', 'stores.json'),
+        path.join(cwd, '..', 'data', 'stores.json'),
+        path.join('/tmp', 'kite-stores.json')
+      ];
+      
+      this.dataFile = possiblePaths.find(p => {
+        try {
+          return fs.existsSync && fs.existsSync(path.dirname(p));
+        } catch {
+          return false;
+        }
+      }) || possiblePaths[possiblePaths.length - 1];
+      
+      this.load();
+
+      // Seed with a demo store if empty
+      if (this.stores.size === 0 && process.env.NODE_ENV === 'development') {
+        this.add({
+          id: "shop_demo_1",
+          shopUrl: "kite-marketplace-demo.myshopify.com",
+          name: "Kite Demo Store",
+          description: "Official merchandise for Kite developers.",
+          isConnected: true,
+        });
+      }
+    } catch (e) {
+      console.warn("StoreRegistry: Failed to initialize Node.js file system paths", e);
+      this.dataFile = '';
+    }
+  }
+
+  private load() {
+    if (typeof globalThis !== 'undefined' && 'window' in globalThis || !this.dataFile || !fs.readFileSync) return;
+    try {
+      if (fs.existsSync(this.dataFile)) {
+        const data = fs.readFileSync(this.dataFile, 'utf-8');
+        const storesArray: ShopifyStore[] = JSON.parse(data);
+        storesArray.forEach(s => this.stores.set(s.id, s));
+      }
+    } catch (error) {
+      console.error("Failed to load stores:", error);
+    }
+  }
+
+  private save() {
+    if (typeof globalThis !== 'undefined' && 'window' in globalThis || !this.dataFile || !fs.writeFileSync) return;
+    try {
+      const dataDir = path.dirname(this.dataFile);
+      if (fs.existsSync && !fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      fs.writeFileSync(this.dataFile, JSON.stringify(Array.from(this.stores.values()), null, 2));
+    } catch (error) {
+      console.error("Failed to save stores:", error);
     }
   }
 
@@ -57,6 +123,7 @@ class StoreRegistry {
     };
     
     this.stores.set(id, store);
+    this.save();
     return store;
   }
 
@@ -69,6 +136,7 @@ class StoreRegistry {
         updatedAt: new Date().toISOString()
       };
       this.stores.set(id, updatedStore);
+      this.save();
       return updatedStore;
     }
     return undefined;
@@ -76,6 +144,7 @@ class StoreRegistry {
 
   remove(id: string) {
     this.stores.delete(id);
+    this.save();
   }
 }
 

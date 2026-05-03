@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const listing = listingStore.create({
+    const listing = await listingStore.create({
       type,
       name,
       description: description || "",
@@ -67,10 +67,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");
   const maxPrice = searchParams.get("maxPrice");
+  const creatorAddress = searchParams.get("creatorAddress");
 
-  const listings = listingStore.list({
+  const listings = await listingStore.list({
     type: type || undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    creatorAddress: creatorAddress || undefined
   });
 
   // Strip content from listings for the public list

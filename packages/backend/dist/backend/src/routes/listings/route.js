@@ -20,7 +20,7 @@ async function POST(req) {
         if (!type || !name || !priceUsdc || !content || !creatorAddress) {
             return server_1.NextResponse.json({ error: "Missing required fields: type, name, priceUsdc, content, creatorAddress" }, { status: 400 });
         }
-        const listing = listing_store_1.listingStore.create({
+        const listing = await listing_store_1.listingStore.create({
             type,
             name,
             description: description || "",
@@ -58,9 +58,11 @@ async function GET(req) {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
     const maxPrice = searchParams.get("maxPrice");
-    const listings = listing_store_1.listingStore.list({
+    const creatorAddress = searchParams.get("creatorAddress");
+    const listings = await listing_store_1.listingStore.list({
         type: type || undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        creatorAddress: creatorAddress || undefined
     });
     // Strip content from listings for the public list
     const publicListings = listings.map(({ content, ...rest }) => rest);

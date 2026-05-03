@@ -6,10 +6,17 @@ import { z } from "zod";
 import { toolRegistry, defineTool } from "../tool-registry";
 import { ERC8004Client } from "@kite/x402-sdk";
 
-// Private key for the agent - using the funded wallet from .env
-const rawKey = process.env.WALLET_PRIVATE_KEY || process.env.AGENT_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001";
-const AGENT_PRIVATE_KEY = (rawKey.trim().startsWith('0x') ? rawKey.trim() : `0x${rawKey.trim()}`) as `0x${string}`;
-const erc8004 = new ERC8004Client(AGENT_PRIVATE_KEY);
+let _erc8004: ERC8004Client | null = null;
+
+function getERC8004Client(): ERC8004Client {
+  if (!_erc8004) {
+    const rawKey = process.env.WALLET_PRIVATE_KEY || process.env.AGENT_PRIVATE_KEY || "0x0000000000000000000000000000000000000000000000000000000000000001";
+    const AGENT_PRIVATE_KEY = (rawKey.trim().startsWith('0x') ? rawKey.trim() : `0x${rawKey.trim()}`) as `0x${string}`;
+    _erc8004 = new ERC8004Client(AGENT_PRIVATE_KEY);
+    console.log(`[ERC-8004] Client initialized with address: ${_erc8004.address}`);
+  }
+  return _erc8004;
+}
 
 // ============================================================
 // Tool Definitions
@@ -24,7 +31,8 @@ const registerIdentityTool = defineTool({
   handler: async ({ agentURI }) => {
     console.log(`[register_identity] 🆔 Registering agent identity...`);
     try {
-      const { agentId, txHash } = await erc8004.registerAgent(agentURI);
+      const client = getERC8004Client();
+      const { agentId, txHash } = await client.registerAgent(agentURI);
       return {
         success: true,
         agentId: agentId.toString(),
@@ -47,8 +55,9 @@ const checkReputationTool = defineTool({
   handler: async ({ agentId }) => {
     console.log(`[check_reputation] ⭐ Checking reputation for: ${agentId}`);
     try {
+      const client = getERC8004Client();
       const id = BigInt(agentId);
-      const summary = await erc8004.getReputationSummary(id);
+      const summary = await client.getReputationSummary(id);
       return {
         success: true,
         agentId,
@@ -70,7 +79,8 @@ const lookupIdentityByOwnerTool = defineTool({
   handler: async ({ ownerAddress }) => {
     console.log(`[lookup_identity] 🔍 Searching for agent owned by: ${ownerAddress}`);
     try {
-      const agentId = await erc8004.findAgentId(ownerAddress as `0x${string}`);
+      const client = getERC8004Client();
+      const agentId = await client.findAgentId(ownerAddress as `0x${string}`);
       return {
         success: true,
         agentId: agentId ? agentId.toString() : null,

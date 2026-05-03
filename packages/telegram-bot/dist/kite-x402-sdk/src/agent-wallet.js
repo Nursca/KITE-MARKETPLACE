@@ -13,8 +13,9 @@ function ensureCDPConfigured() {
     if (cdpCheckDone)
         return cdpConfigured;
     cdpCheckDone = true;
-    const apiKeyName = process.env.CDP_API_KEY_NAME;
-    const privateKey = process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const hasProcess = typeof process !== 'undefined';
+    const apiKeyName = hasProcess ? process.env.CDP_API_KEY_NAME : undefined;
+    const privateKey = hasProcess ? process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, '\n') : undefined;
     if (apiKeyName && privateKey) {
         coinbase_sdk_1.Coinbase.configure({ apiKeyName, privateKey });
         cdpConfigured = true;
@@ -35,7 +36,7 @@ async function getAgentWallet() {
     if (!ensureCDPConfigured())
         return null;
     try {
-        const savedWalletData = process.env.CDP_WALLET_DATA;
+        const savedWalletData = typeof process !== 'undefined' ? process.env.CDP_WALLET_DATA : undefined;
         if (savedWalletData) {
             console.log("Loading existing CDP Agent Wallet...");
             agentWallet = await coinbase_sdk_1.Wallet.import(JSON.parse(savedWalletData));

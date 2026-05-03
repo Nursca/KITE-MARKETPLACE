@@ -23,7 +23,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const { id } = await context.params;
-  const listing = listingStore.get(id);
+  const listing = await listingStore.get(id);
 
   if (!listing) {
     return NextResponse.json({ error: "Listing not found" }, { status: 404 });
@@ -93,7 +93,7 @@ export async function GET(
     req.headers.get("X-Buyer-Address") ||
     "0xunknown";
 
-  listingStore.recordSale(listing.id, buyerAddress, txHash);
+  await listingStore.recordSale(listing.id, buyerAddress, txHash);
 
   return NextResponse.json({
     success: true,

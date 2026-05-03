@@ -24,7 +24,7 @@ const createListingTool = (0, tool_registry_1.defineTool)({
     }),
     handler: async (args) => {
         console.log(`[create_listing] 💎 Creating ${args.type} listing: ${args.name}`);
-        const listing = listing_store_1.listingStore.create(args);
+        const listing = await listing_store_1.listingStore.create(args);
         const baseUrl = process.env.KITE_MARKETPLACE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
         return {
             success: true,
@@ -49,7 +49,7 @@ const listListingsTool = (0, tool_registry_1.defineTool)({
         maxPrice: zod_1.z.number().optional().describe("Max price in USDC")
     }),
     handler: async ({ type, maxPrice }) => {
-        const listings = listing_store_1.listingStore.list({ type, maxPrice });
+        const listings = await listing_store_1.listingStore.list({ type, maxPrice });
         // Strip content for the list
         const publicListings = listings.map(({ content, ...rest }) => rest);
         return {
@@ -66,7 +66,7 @@ const previewListingTool = (0, tool_registry_1.defineTool)({
         listingId: zod_1.z.string().describe("The listing ID to preview")
     }),
     handler: async ({ listingId }) => {
-        const listing = listing_store_1.listingStore.get(listingId);
+        const listing = await listing_store_1.listingStore.get(listingId);
         if (!listing) {
             return { success: false, error: "Listing not found" };
         }

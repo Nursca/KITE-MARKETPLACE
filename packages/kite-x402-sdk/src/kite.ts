@@ -10,7 +10,10 @@ export const kiteTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_KITE_RPC ?? 'https://rpc-testnet.gokite.ai/'],
+      http: [
+        (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_KITE_RPC : undefined) ?? 
+        'https://rpc-testnet.gokite.ai/'
+      ],
     },
   },
   blockExplorers: {

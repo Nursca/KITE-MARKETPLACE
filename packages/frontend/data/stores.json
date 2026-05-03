@@ -1,0 +1,11 @@
+[
+  {
+    "id": "shop_demo_1",
+    "name": "Kite Demo Store",
+    "description": "Official merchandise for Kite developers.",
+    "isConnected": true,
+    "createdAt": "2026-05-02T22:08:36.543Z",
+    "updatedAt": "2026-05-02T22:08:36.551Z",
+    "shopUrl": "kite-marketplace-demo.myshopify.com"
+  }
+]

@@ -10,9 +10,9 @@ const accounts_1 = require("viem/accounts");
 const kite_1 = require("../kite");
 const abis_1 = require("./abis");
 exports.ERC8004_CONTRACTS = {
-    identityRegistry: "0x9788b77d09e2D189B9C7e1D392B7f762D5650a3a",
-    reputationRegistry: "0xeaD31017A6ca6CEE1bB1BF7c1413CB7071e2B51D",
-    validationRegistry: "0x93ee9C875648846Ba16ff6f6733ebf4659d4Bcbe",
+    identityRegistry: "0x7096C8FD97a399ec59C8DF7055329223821b46F1",
+    reputationRegistry: "0xc14d1eE6daCfe757cef570B339Ff8Ea7084bf354",
+    validationRegistry: "0x4fb2aBD8279659187B2792FfA6fE9a4837D4b411",
     agentPassport: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Placeholder for local/testnet deployment
 };
 const KITE_RPC = "https://rpc-testnet.gokite.ai/";

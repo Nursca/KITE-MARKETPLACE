@@ -7,11 +7,12 @@ const router = (0, express_1.Router)();
 /**
  * GET /api/listings
  */
-router.get('/', (req, res) => {
-    const { type, maxPrice } = req.query;
-    const listings = listing_store_1.listingStore.list({
+router.get('/', async (req, res) => {
+    const { type, maxPrice, creatorAddress } = req.query;
+    const listings = await listing_store_1.listingStore.list({
         type: type || undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        creatorAddress: creatorAddress || undefined,
     });
     const publicListings = listings.map(({ content, ...rest }) => rest);
     res.json({
@@ -23,13 +24,13 @@ router.get('/', (req, res) => {
 /**
  * POST /api/listings
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { type, name, description, priceUsdc, content, preview, creatorAddress } = req.body;
         if (!type || !name || !priceUsdc || !content || !creatorAddress) {
             return res.status(400).json({ error: "Missing required fields: type, name, priceUsdc, content, creatorAddress" });
         }
-        const listing = listing_store_1.listingStore.create({
+        const listing = await listing_store_1.listingStore.create({
             type,
             name,
             description: description || "",
@@ -66,7 +67,7 @@ router.post('/', (req, res) => {
 router.get('/:id/content', async (req, res) => {
     const { id } = req.params;
     const agentAddress = req.headers['x-agent-address'];
-    const listing = listing_store_1.listingStore.get(id);
+    const listing = await listing_store_1.listingStore.get(id);
     if (!listing) {
         return res.status(404).json({ error: "Listing not found" });
     }

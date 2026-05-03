@@ -13,7 +13,13 @@ import {
   CheckCircle2,
   RefreshCw,
   X,
-  Loader2
+  Loader2,
+  Lock,
+  Zap,
+  Database,
+  Code,
+  FileText,
+  Layers
 } from "lucide-react";
 import Image from "next/image";
 import { Toast } from "@/components/Toast";
@@ -35,9 +41,34 @@ interface ShopifyProduct {
   images: string[];
 }
 
+interface Listing {
+  id: string;
+  type: string;
+  name: string;
+  description: string;
+  priceUsdc: number;
+  preview: string;
+  salesCount: number;
+  totalEarnedUsdc: number;
+  creatorAddress: string;
+}
+
+const TYPE_ICONS: Record<string, React.ReactNode> = {
+  api: <Zap className="h-4 w-4" />,
+  dataset: <Database className="h-4 w-4" />,
+  code: <Code className="h-4 w-4" />,
+  article: <FileText className="h-4 w-4" />,
+  file: <FileText className="h-4 w-4" />,
+  shopify: <ShoppingBag className="h-4 w-4" />,
+};
+
+const MERCHANT_ADDRESS = '0xb23c769dFc7ef020ec60A19567aB675C46a49910';
+
 export default function StoresPage() {
   const [stores, setStores] = useState<ShopifyStore[]>([]);
+  const [myListings, setMyListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingListings, setLoadingListings] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Import Modal State
@@ -49,19 +80,8 @@ export default function StoresPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        const response = await fetch('/api/shopify/stores');
-        const data = await response.json();
-        setStores(data.stores);
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch stores", error);
-        setLoading(false);
-      }
-    };
-
-    fetchStores();
+    fetchStoresList();
+    fetchMyListings();
   }, []);
 
   const fetchStoresList = async () => {
@@ -69,8 +89,24 @@ export default function StoresPage() {
       const response = await fetch('/api/shopify/stores');
       const data = await response.json();
       setStores(data.stores);
+      setLoading(false);
     } catch (error) {
       console.error("Failed to fetch stores", error);
+      setLoading(false);
+    }
+  };
+
+  const fetchMyListings = async () => {
+    try {
+      const response = await fetch(`/api/listings?creatorAddress=${MERCHANT_ADDRESS}`);
+      const data = await response.json();
+      if (data.listings) {
+        setMyListings(data.listings);
+      }
+      setLoadingListings(false);
+    } catch (error) {
+      console.error("Failed to fetch listings", error);
+      setLoadingListings(false);
     }
   };
 
@@ -103,13 +139,13 @@ export default function StoresPage() {
           priceUsdc: product.price,
           content: `SHOPIFY_STORE=${store?.shopUrl}\nPRODUCT_ID=${product.id}\nVARIANT_ID=default`,
           preview: `Physical product from ${store?.name}. Ships worldwide.`,
-          creatorAddress: '0xb23c769dFc7ef020ec60A19567aB675C46a49910' // Demo creator
+          creatorAddress: MERCHANT_ADDRESS
         })
       });
       
       if (res.ok) {
         setToast({ message: `Successfully imported "${product.title}" to marketplace!`, type: 'success' });
-        // Optional: remove from list or mark as imported
+        fetchMyListings();
       } else {
         setToast({ message: "Failed to import product", type: 'error' });
       }
@@ -183,7 +219,7 @@ export default function StoresPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-primary font-label font-bold uppercase tracking-widest text-xs">
               <ShoppingBag className="h-3.5 w-3.5" />
-              Connected Integrations
+              Merchant Hub
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-headline italic">Your Shopify Stores</h1>
             <p className="text-on-surface-variant max-w-xl text-sm leading-relaxed">
@@ -277,6 +313,68 @@ export default function StoresPage() {
                 <p className="text-[10px] text-on-surface-variant opacity-50 italic">Expand your agentic reach</p>
               </div>
             </Link>
+          </div>
+        )}
+
+        {/* My Marketplace Listings Section */}
+        <div className="mt-20 mb-8 sm:mb-12">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-primary font-label font-bold uppercase tracking-widest text-xs">
+              <Zap className="h-3.5 w-3.5" />
+              Kite Marketplace
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-headline italic">Your Active Listings</h2>
+            <p className="text-on-surface-variant max-w-xl text-sm leading-relaxed">
+              Digital assets and Shopify products you are currently selling on the Kite Network.
+            </p>
+          </div>
+        </div>
+
+        {loadingListings ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-48 rounded-2xl bg-surface-container-low animate-pulse border border-outline-variant/10" />
+            ))}
+          </div>
+        ) : myListings.length === 0 ? (
+          <div className="bg-surface-container-low rounded-3xl p-12 text-center border border-dashed border-outline-variant/30 max-w-3xl">
+            <p className="text-on-surface-variant italic text-sm mb-0">You haven't created any marketplace listings yet.</p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {myListings.map(listing => (
+              <div key={listing.id} className="group p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary/40 transition-all duration-300 flex flex-col gap-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                      {TYPE_ICONS[listing.type] || <Layers className="h-4 w-4" />}
+                    </span>
+                    <span className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant opacity-60">
+                      {listing.type}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-primary font-bold text-sm">
+                    <Lock className="h-3 w-3" />
+                    {listing.priceUsdc.toFixed(2)} USDC
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-headline italic text-base mb-1">{listing.name}</h3>
+                  <p className="text-xs text-on-surface-variant opacity-70 line-clamp-2">{listing.description}</p>
+                </div>
+                <div className="mt-auto">
+                  <p className="text-[10px] text-on-surface-variant opacity-50 mb-3 italic">{listing.preview}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-on-surface-variant opacity-40 font-label">
+                      {listing.salesCount} sold
+                    </span>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold font-label uppercase tracking-widest">
+                      Active
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>

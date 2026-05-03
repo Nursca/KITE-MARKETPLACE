@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { groq } from '@ai-sdk/groq';
 import { generateText, tool } from 'ai';
 import { z } from 'zod';
 import dotenv from 'dotenv';
@@ -14,6 +15,7 @@ import {
 } from '@kite/x402-sdk';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') });
+dotenv.config({ path: path.join(process.cwd(), '../../.env') });
 
 const program = new Command();
 
@@ -22,7 +24,7 @@ program
   .description('Standalone AI Agent for the Kite Marketplace')
   .version('0.1.0')
   .argument('[prompt]', 'Initial prompt for the agent')
-  .option('-m, --model <model>', 'Model to use (openai, anthropic)', 'openai')
+  .option('-m, --model <model>', 'Model to use (openai, anthropic, groq)', 'openai')
   .action(async (prompt, options) => {
     if (!prompt) {
       console.log(chalk.bold.cyan('\n🤖 KIMA CLI Agent'));
@@ -36,9 +38,14 @@ program
 async function runAgent(prompt: string, modelType: string) {
   console.log(chalk.yellow(`\n🚀 KIMA Agent starting (Model: ${modelType})...\n`));
 
-  const model: any = modelType === 'anthropic' 
-    ? anthropic('claude-3-5-sonnet-20240620')
-    : openai('gpt-4o');
+  let model: any;
+  if (modelType === 'anthropic') {
+    model = anthropic('claude-3-5-sonnet-20240620');
+  } else if (modelType === 'groq') {
+    model = groq('llama-3.3-70b-versatile');
+  } else {
+    model = openai('gpt-4o');
+  }
 
   try {
     // Aggressively cast to any to bypass strict version-mismatched types in the environment

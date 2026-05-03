@@ -16,7 +16,10 @@ export interface ShopifyStore {
 }
 declare class StoreRegistry {
     private stores;
+    private readonly dataFile;
     constructor();
+    private load;
+    private save;
     get(id: string): ShopifyStore | undefined;
     getByUrl(shopUrl: string): ShopifyStore | undefined;
     list(): ShopifyStore[];

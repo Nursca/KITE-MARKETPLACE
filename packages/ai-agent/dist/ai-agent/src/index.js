@@ -6,6 +6,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const openai_1 = require("@ai-sdk/openai");
 const anthropic_1 = require("@ai-sdk/anthropic");
+const groq_1 = require("@ai-sdk/groq");
 const ai_1 = require("ai");
 const zod_1 = require("zod");
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -14,13 +15,14 @@ const chalk_1 = __importDefault(require("chalk"));
 const path_1 = __importDefault(require("path"));
 const x402_sdk_1 = require("@kite/x402-sdk");
 dotenv_1.default.config({ path: path_1.default.join(process.cwd(), '.env') });
+dotenv_1.default.config({ path: path_1.default.join(process.cwd(), '../../.env') });
 const program = new commander_1.Command();
 program
     .name('kite-agent')
     .description('Standalone AI Agent for the Kite Marketplace')
     .version('0.1.0')
     .argument('[prompt]', 'Initial prompt for the agent')
-    .option('-m, --model <model>', 'Model to use (openai, anthropic)', 'openai')
+    .option('-m, --model <model>', 'Model to use (openai, anthropic, groq)', 'openai')
     .action(async (prompt, options) => {
     if (!prompt) {
         console.log(chalk_1.default.bold.cyan('\n🤖 KIMA CLI Agent'));
@@ -31,9 +33,16 @@ program
 });
 async function runAgent(prompt, modelType) {
     console.log(chalk_1.default.yellow(`\n🚀 KIMA Agent starting (Model: ${modelType})...\n`));
-    const model = modelType === 'anthropic'
-        ? (0, anthropic_1.anthropic)('claude-3-5-sonnet-20240620')
-        : (0, openai_1.openai)('gpt-4o');
+    let model;
+    if (modelType === 'anthropic') {
+        model = (0, anthropic_1.anthropic)('claude-3-5-sonnet-20240620');
+    }
+    else if (modelType === 'groq') {
+        model = (0, groq_1.groq)('llama-3.3-70b-versatile');
+    }
+    else {
+        model = (0, openai_1.openai)('gpt-4o');
+    }
     try {
         // Aggressively cast to any to bypass strict version-mismatched types in the environment
         const options = {

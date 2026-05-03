@@ -49,9 +49,10 @@ const getMarketplaceStatsTool = (0, tool_registry_1.defineTool)({
     description: "Get live Kite Marketplace stats: listings, sales volume, top sellers.",
     inputSchema: zod_1.z.object({}),
     handler: async () => {
+        const stats = await listing_store_1.listingStore.getStats();
         return {
             success: true,
-            stats: listing_store_1.listingStore.getStats()
+            stats
         };
     },
 });

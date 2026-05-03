@@ -118,10 +118,12 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([])
   const [loadingListings, setLoadingListings] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const handleConnect = () => open()
 
   useEffect(() => {
+    setMounted(true)
     fetch('/api/stats')
       .then(r => r.json())
       .then(data => setStats(data))
@@ -135,6 +137,17 @@ export default function Home() {
       })
       .catch(() => setLoadingListings(false))
   }, [])
+
+  // Prevent hydration mismatch by only rendering client-dependent UI after mount
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse font-headline italic text-2xl opacity-20 tracking-tighter">
+          KITE MARKETPLACE
+        </div>
+      </div>
+    );
+  }
 
   if (isConnected) {
     return <ChatUI />

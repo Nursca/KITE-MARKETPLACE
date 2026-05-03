@@ -384,7 +384,7 @@ export function ChatUI() {
         })
       }
     } catch {
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', parts: [{ type: 'text', text: 'Sorry, I hit an error. Check your OPENAI_API_KEY env var.' }] }])
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', parts: [{ type: 'text', text: 'Sorry, I hit an error. Please check that either OPENAI_API_KEY or GROQ_API_KEY is correctly set in your .env file.' }] }])
     } finally { setIsLoading(false) }
   }
 

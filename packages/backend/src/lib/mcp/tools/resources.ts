@@ -25,7 +25,7 @@ const createListingTool = defineTool({
   handler: async (args) => {
     console.log(`[create_listing] 💎 Creating ${args.type} listing: ${args.name}`);
     
-    const listing = listingStore.create(args);
+    const listing = await listingStore.create(args);
     const baseUrl = process.env.KITE_MARKETPLACE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     
     return {
@@ -52,7 +52,7 @@ const listListingsTool = defineTool({
     maxPrice: z.number().optional().describe("Max price in USDC")
   }),
   handler: async ({ type, maxPrice }) => {
-    const listings = listingStore.list({ type, maxPrice });
+    const listings = await listingStore.list({ type, maxPrice });
     // Strip content for the list
     const publicListings = listings.map(({ content, ...rest }) => rest);
     
@@ -71,7 +71,7 @@ const previewListingTool = defineTool({
     listingId: z.string().describe("The listing ID to preview")
   }),
   handler: async ({ listingId }) => {
-    const listing = listingStore.get(listingId);
+    const listing = await listingStore.get(listingId);
     if (!listing) {
       return { success: false, error: "Listing not found" };
     }

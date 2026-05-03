@@ -1,10 +1,8 @@
 /**
  * Kite Marketplace Listing Store
  *
- * In-memory store for digital listings (APIs, datasets, articles, code, files)
- * built for the Kite Testnet Agentic Economy.
- *
- * In a production app, this would be a database (PostgreSQL/Supabase/Drizzle).
+ * Migrated to Supabase (PostgreSQL) for production-grade persistence.
+ * Includes a local JSON fallback for development without a DB.
  */
 export interface Listing {
     id: string;
@@ -26,22 +24,31 @@ export interface Sale {
     timestamp: string;
 }
 declare class ListingStore {
+    private supabase;
     private listings;
     private sales;
+    private readonly dataDir;
+    private readonly listingsFile;
+    private readonly salesFile;
+    private isUsingSupabase;
     constructor();
+    private ensureDataDir;
+    private loadLocal;
+    private saveLocal;
     private seed;
-    get(id: string): Listing | undefined;
+    get(id: string): Promise<Listing | undefined>;
     list(filters?: {
         type?: string;
         maxPrice?: number;
-    }): Listing[];
+        creatorAddress?: string;
+    }): Promise<Listing[]>;
     create(args: Partial<Listing> & {
         name: string;
         type: any;
         priceUsdc: number;
-    }): Listing;
-    recordSale(listingId: string, buyerAddress: string, txHash: string): void;
-    getStats(): {
+    }): Promise<Listing>;
+    recordSale(listingId: string, buyerAddress: string, txHash: string): Promise<void>;
+    getStats(): Promise<{
         totalListings: number;
         totalSales: number;
         totalVolumeUsdc: number;
@@ -50,7 +57,7 @@ declare class ListingStore {
             address: string;
             sales: number;
         }[];
-    };
+    }>;
 }
 export declare const listingStore: ListingStore;
 export {};
