@@ -36,6 +36,8 @@ declare class ListingStore {
     private loadLocal;
     private saveLocal;
     private seed;
+    private mapFromDb;
+    private mapToDb;
     get(id: string): Promise<Listing | undefined>;
     list(filters?: {
         type?: string;

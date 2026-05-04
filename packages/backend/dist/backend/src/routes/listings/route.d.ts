@@ -19,6 +19,11 @@ export declare function POST(req: NextRequest): Promise<NextResponse<{
         type: "api" | "file" | "article" | "dataset" | "code" | "shopify";
         priceUsdc: number;
         preview: string;
+        creatorAddress: string;
+        description: string;
+        salesCount: number;
+        totalEarnedUsdc: number;
+        createdAt: string;
     };
 }>>;
 /**
@@ -41,4 +46,14 @@ export declare function GET(req: NextRequest): Promise<NextResponse<{
         salesCount: number;
         totalEarnedUsdc: number;
     }[];
+    stats: {
+        totalListings: number;
+        totalSales: number;
+        totalVolumeUsdc: number;
+        activeAgents: number;
+        topSellers: {
+            address: string;
+            sales: number;
+        }[];
+    };
 }>>;

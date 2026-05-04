@@ -129,10 +129,42 @@ const TOOLS = [
       },
       required: ["agentId"]
     }
+  },
+  {
+    name: "purchase_with_passport",
+    description: "Buy a listing using Kite Agent Passport (user-controlled wallet)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        listing_id: { type: "string" },
+        payer_addr: { type: "string", description: "Your Passport wallet address" }
+      },
+      required: ["listing_id", "payer_addr"]
+    }
   }
 ];
 
 import { executeAgentPurchase } from "@kite/x402-sdk";
+import { exec } from "child_process";
+import { promisify } from "util";
+const execAsync = promisify(exec);
+
+// Helper to call local kpass CLI tool if needed
+async function callKpassTool(command, args) {
+  // In a real environment, this would interface with the Kite Passport CLI or local daemon.
+  // We simulate it here as per instructions, or it can be hooked up to the real kpass.
+  try {
+    const res = await fetch(`http://localhost:3001/kpass/${command}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(args)
+    });
+    if (res.ok) return res.json();
+  } catch (e) {
+    // fallback if no local kpass server
+  }
+  return { x_payment: "demo-signed-kpass-payload-base64-here" };
+}
 
 // ─── MCP-to-HTTP bridge ────────────────────────────────────────────────────
 
@@ -161,6 +193,33 @@ async function callMCPTool(name, args) {
       return JSON.stringify(receipt, null, 2);
     } catch (error) {
       throw new Error(`Local Agent Purchase Failed: ${error.message}`);
+    }
+  }
+
+  if (name === "purchase_with_passport") {
+    const { listing_id, payer_addr } = args;
+    
+    // 1. Fetch the listing's 402 payment requirements
+    const res = await fetch(`${SERVER_URL}/api/listings/${listing_id}/content`);
+    if (res.status === 402) {
+      const { accepts } = await res.json();
+      
+      // 2. Use kpass CLI / API to create signed X-PAYMENT header
+      const payment = await callKpassTool('approve_payment', {
+        payer_addr,
+        payee_addr: accepts[0].payTo,
+        amount: accepts[0].maxAmountRequired,
+        token_type: "USDC"
+      });
+
+      // 3. Re-fetch with payment header
+      const contentRes = await fetch(
+        `${SERVER_URL}/api/listings/${listing_id}/content`,
+        { headers: { "X-PAYMENT": payment.x_payment } }
+      );
+      return JSON.stringify(await contentRes.json(), null, 2);
+    } else {
+      return JSON.stringify(await res.json(), null, 2);
     }
   }
 

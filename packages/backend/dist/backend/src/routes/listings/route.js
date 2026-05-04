@@ -41,6 +41,11 @@ async function POST(req) {
                 type: listing.type,
                 priceUsdc: listing.priceUsdc,
                 preview: listing.preview,
+                creatorAddress: listing.creatorAddress,
+                description: listing.description,
+                salesCount: listing.salesCount,
+                totalEarnedUsdc: listing.totalEarnedUsdc,
+                createdAt: listing.createdAt,
             }
         }, { status: 201 });
     }
@@ -66,9 +71,11 @@ async function GET(req) {
     });
     // Strip content from listings for the public list
     const publicListings = listings.map(({ content, ...rest }) => rest);
+    const stats = await listing_store_1.listingStore.getStats();
     return server_1.NextResponse.json({
         success: true,
         count: publicListings.length,
         listings: publicListings,
+        stats,
     });
 }

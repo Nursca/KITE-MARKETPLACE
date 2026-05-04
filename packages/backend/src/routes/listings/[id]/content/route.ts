@@ -48,15 +48,16 @@ export async function GET(
         x402Version: 1,
         accepts: [
           {
-            scheme: "exact",
-            network: "eip155:2368",
+            scheme: "gokite-aa",
+            network: "kite-mainnet",
             maxAmountRequired: Math.round(listing.priceUsdc * 1_000_000).toString(), // USDC 6 decimals
             resource: `${appUrl}/api/listings/${id}/content`,
-            description: `Purchase: ${listing.name}`,
+            description: `Unlock this digital listing`,
             mimeType: "application/json",
             payTo,
             maxTimeoutSeconds: 300,
-            asset: "0x534b2f3A21130d7a60830c2Df862319e593943A3", // Kite Testnet USDC
+            asset: process.env.KITE_MAINNET_USDC_ADDRESS || "0x...", // Kite Mainnet USDC
+            merchantName: "Kite Marketplace",
             extra: {
               listingId: listing.id,
               listingName: listing.name,
@@ -77,6 +78,7 @@ export async function GET(
 
   // Payment header present — parse and record sale
   let txHash = "0xpending";
+  let payerAddress = "";
   try {
     const decoded = JSON.parse(Buffer.from(paymentHeader, "base64").toString());
     txHash =
@@ -84,6 +86,7 @@ export async function GET(
       decoded.payload?.hash ||
       decoded.transactionHash ||
       txHash;
+    payerAddress = decoded.authorization?.from || decoded.payload?.authorization?.from || "";
   } catch {
     // non-fatal parse failure
   }
@@ -91,7 +94,23 @@ export async function GET(
   const buyerAddress =
     req.headers.get("x-buyer-address") ||
     req.headers.get("X-Buyer-Address") ||
+    payerAddress ||
     "0xunknown";
+
+  // Check if they have a Passport DID (call Kite's identity resolver)
+  let passportData = null;
+  if (payerAddress) {
+    try {
+      const passportRes = await fetch(
+        `https://api.gokite.ai/identity/resolve/${payerAddress}`
+      );
+      if (passportRes.ok) {
+        passportData = await passportRes.json();
+      }
+    } catch {
+      // Ignore
+    }
+  }
 
   await listingStore.recordSale(listing.id, buyerAddress, txHash);
 
@@ -110,6 +129,7 @@ export async function GET(
       txHash,
       explorerUrl: `https://testnet.kiteexplorer.com/tx/${txHash}`,
       timestamp: new Date().toISOString(),
+      passportIdentity: passportData,
     },
   });
 }

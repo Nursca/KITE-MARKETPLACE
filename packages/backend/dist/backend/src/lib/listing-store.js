@@ -144,6 +144,38 @@ class ListingStore {
         ];
         demos.forEach(d => this.create(d));
     }
+    // --- DB Mappers to handle snake_case <-> camelCase ---
+    mapFromDb(row) {
+        return {
+            id: row.id,
+            type: row.type,
+            name: row.name,
+            description: row.description,
+            priceUsdc: Number(row.price_usdc),
+            content: row.content,
+            preview: row.preview,
+            creatorAddress: row.creator_address,
+            createdAt: row.created_at,
+            salesCount: row.sales_count,
+            totalEarnedUsdc: Number(row.total_earned_usdc)
+        };
+    }
+    mapToDb(listing) {
+        return {
+            id: listing.id,
+            type: listing.type,
+            name: listing.name,
+            description: listing.description,
+            price_usdc: listing.priceUsdc,
+            content: listing.content,
+            preview: listing.preview,
+            creator_address: listing.creatorAddress,
+            created_at: listing.createdAt,
+            sales_count: listing.salesCount,
+            total_earned_usdc: listing.totalEarnedUsdc
+        };
+    }
+    // -----------------------------------------------------
     async get(id) {
         if (this.isUsingSupabase && this.supabase) {
             const { data, error } = await this.supabase
@@ -153,7 +185,7 @@ class ListingStore {
                 .single();
             if (error || !data)
                 return undefined;
-            return data;
+            return this.mapFromDb(data);
         }
         return this.listings.get(id);
     }
@@ -163,15 +195,15 @@ class ListingStore {
             if (filters.type)
                 query = query.eq('type', filters.type);
             if (filters.maxPrice)
-                query = query.lte('priceUsdc', filters.maxPrice);
+                query = query.lte('price_usdc', filters.maxPrice);
             if (filters.creatorAddress)
-                query = query.ilike('creatorAddress', filters.creatorAddress);
-            const { data, error } = await query.order('createdAt', { ascending: false });
+                query = query.ilike('creator_address', filters.creatorAddress);
+            const { data, error } = await query.order('created_at', { ascending: false });
             if (error) {
                 console.error("Supabase list error:", error);
                 return [];
             }
-            return data;
+            return data.map((row) => this.mapFromDb(row));
         }
         // Local filter
         let result = Array.from(this.listings.values());
@@ -198,7 +230,7 @@ class ListingStore {
             ...args
         };
         if (this.isUsingSupabase && this.supabase) {
-            const { error } = await this.supabase.from('listings').insert([listing]);
+            const { error } = await this.supabase.from('listings').insert([this.mapToDb(listing)]);
             if (error)
                 console.error("Supabase create error:", error);
         }
@@ -214,9 +246,9 @@ class ListingStore {
             if (!listing)
                 return;
             const sale = {
-                listingId,
-                buyerAddress,
-                txHash,
+                listing_id: listingId,
+                buyer_address: buyerAddress,
+                tx_hash: txHash,
                 timestamp: new Date().toISOString()
             };
             // Atomic update for salesCount and earned
@@ -224,8 +256,8 @@ class ListingStore {
             const { error: listErr } = await this.supabase
                 .from('listings')
                 .update({
-                salesCount: listing.salesCount + 1,
-                totalEarnedUsdc: listing.totalEarnedUsdc + listing.priceUsdc
+                sales_count: listing.salesCount + 1,
+                total_earned_usdc: listing.totalEarnedUsdc + listing.priceUsdc
             })
                 .eq('id', listingId);
             if (saleErr || listErr)
@@ -249,10 +281,10 @@ class ListingStore {
     async getStats() {
         if (this.isUsingSupabase && this.supabase) {
             const { count: totalListings } = await this.supabase.from('listings').select('*', { count: 'exact', head: true });
-            const { data: salesData } = await this.supabase.from('sales').select('listingId');
-            const { data: listingsData } = await this.supabase.from('listings').select('priceUsdc, creatorAddress');
+            const { data: salesData } = await this.supabase.from('sales').select('listing_id');
+            const { data: listingsData } = await this.supabase.from('listings').select('price_usdc, creator_address');
             const totalSales = salesData?.length || 0;
-            const totalVolumeUsdc = listingsData?.reduce((acc, l) => acc + (l.priceUsdc || 0), 0) || 0; // This is naive, should join with sales
+            const totalVolumeUsdc = listingsData?.reduce((acc, l) => acc + (l.price_usdc || 0), 0) || 0; // naive sum
             return {
                 totalListings: totalListings || 0,
                 totalSales,

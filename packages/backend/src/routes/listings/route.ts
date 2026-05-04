@@ -46,6 +46,11 @@ export async function POST(req: NextRequest) {
         type: listing.type,
         priceUsdc: listing.priceUsdc,
         preview: listing.preview,
+        creatorAddress: listing.creatorAddress,
+        description: listing.description,
+        salesCount: listing.salesCount,
+        totalEarnedUsdc: listing.totalEarnedUsdc,
+        createdAt: listing.createdAt,
       }
     }, { status: 201 });
 
@@ -77,10 +82,12 @@ export async function GET(req: NextRequest) {
 
   // Strip content from listings for the public list
   const publicListings = listings.map(({ content, ...rest }) => rest);
+  const stats = await listingStore.getStats();
 
   return NextResponse.json({
     success: true,
     count: publicListings.length,
     listings: publicListings,
+    stats,
   });
 }

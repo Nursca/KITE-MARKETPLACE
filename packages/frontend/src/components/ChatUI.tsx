@@ -416,7 +416,8 @@ export function ChatUI() {
       })
       const data = await res.json()
       if (data.success) {
-        setListings(prev => [...prev, { ...data.listing, content: '', salesCount: 0, totalEarnedUsdc: 0, creatorAddress: address, createdAt: new Date().toISOString() }])
+        const fresh = await fetch('/api/listings').then(r => r.json())
+        setListings(fresh.listings || [])
         setCreateForm({ type: 'api', name: '', description: '', priceUsdc: '0.50', content: '', preview: '' })
       }
     } catch {}

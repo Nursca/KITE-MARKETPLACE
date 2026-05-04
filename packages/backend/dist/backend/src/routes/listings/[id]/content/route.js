@@ -37,15 +37,16 @@ async function GET(req, context) {
             x402Version: 1,
             accepts: [
                 {
-                    scheme: "exact",
-                    network: "eip155:2368",
+                    scheme: "gokite-aa",
+                    network: "kite-mainnet",
                     maxAmountRequired: Math.round(listing.priceUsdc * 1000000).toString(), // USDC 6 decimals
                     resource: `${appUrl}/api/listings/${id}/content`,
-                    description: `Purchase: ${listing.name}`,
+                    description: `Unlock this digital listing`,
                     mimeType: "application/json",
                     payTo,
                     maxTimeoutSeconds: 300,
-                    asset: "0x534b2f3A21130d7a60830c2Df862319e593943A3", // Kite Testnet USDC
+                    asset: process.env.KITE_MAINNET_USDC_ADDRESS || "0x...", // Kite Mainnet USDC
+                    merchantName: "Kite Marketplace",
                     extra: {
                         listingId: listing.id,
                         listingName: listing.name,
@@ -63,6 +64,7 @@ async function GET(req, context) {
     }
     // Payment header present — parse and record sale
     let txHash = "0xpending";
+    let payerAddress = "";
     try {
         const decoded = JSON.parse(Buffer.from(paymentHeader, "base64").toString());
         txHash =
@@ -70,13 +72,28 @@ async function GET(req, context) {
                 decoded.payload?.hash ||
                 decoded.transactionHash ||
                 txHash;
+        payerAddress = decoded.authorization?.from || decoded.payload?.authorization?.from || "";
     }
     catch {
         // non-fatal parse failure
     }
     const buyerAddress = req.headers.get("x-buyer-address") ||
         req.headers.get("X-Buyer-Address") ||
+        payerAddress ||
         "0xunknown";
+    // Check if they have a Passport DID (call Kite's identity resolver)
+    let passportData = null;
+    if (payerAddress) {
+        try {
+            const passportRes = await fetch(`https://api.gokite.ai/identity/resolve/${payerAddress}`);
+            if (passportRes.ok) {
+                passportData = await passportRes.json();
+            }
+        }
+        catch {
+            // Ignore
+        }
+    }
     await listing_store_1.listingStore.recordSale(listing.id, buyerAddress, txHash);
     return server_1.NextResponse.json({
         success: true,
@@ -93,6 +110,7 @@ async function GET(req, context) {
             txHash,
             explorerUrl: `https://testnet.kiteexplorer.com/tx/${txHash}`,
             timestamp: new Date().toISOString(),
+            passportIdentity: passportData,
         },
     });
 }
