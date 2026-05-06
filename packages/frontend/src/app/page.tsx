@@ -178,15 +178,6 @@ export default function Home() {
             <Link href="/demo" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
               A2A Demo
             </Link>
-            <Link href="/connect-shopify" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
-              Connect Shopify
-            </Link>
-            <Link href="/stores" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
-              My Stores
-            </Link>
-            <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
-              GitHub
-            </Link>
           </div>
           <div className="flex gap-2 sm:gap-3 items-center">
             <button
@@ -221,15 +212,6 @@ export default function Home() {
             </a>
             <Link href="/demo" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
               A2A Demo
-            </Link>
-            <Link href="/connect-shopify" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
-              Connect Shopify
-            </Link>
-            <Link href="/stores" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
-              My Stores
-            </Link>
-            <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
-              GitHub
             </Link>
             <button
               onClick={() => { setMobileMenuOpen(false); handleConnect() }}
@@ -419,10 +401,7 @@ export default function Home() {
         <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
           <div className="text-lg sm:text-xl font-headline italic tracking-tighter">KITE MARKETPLACE</div>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-[11px] font-label uppercase tracking-widest opacity-60">
-            <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" className="hover:text-primary transition-colors">GitHub</Link>
-            <Link href="/.well-known/agent.json" target="_blank" className="hover:text-primary transition-colors">Agent Card</Link>
-            <Link href="/api/mcp" target="_blank" className="hover:text-primary transition-colors">MCP Server</Link>
-            <Link href="/SKILL.md" target="_blank" className="hover:text-primary transition-colors">Skill Docs</Link>
+            <Link href="https://github.com/Nursca/KITE-MARKETPLACE" target="_blank" className="hover:text-primary transition-colors">GitHub</Link>            <Link href="/api/mcp" target="_blank" className="hover:text-primary transition-colors">MCP Server</Link>
           </div>
           <p className="text-[10px] sm:text-[11px] font-label uppercase tracking-widest opacity-40 text-center">
             Built for Kite AI Hackathon 2026 · Agentic Commerce Track
