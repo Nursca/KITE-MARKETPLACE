@@ -6,9 +6,9 @@ import path from 'path';
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const BACKEND_URL = process.env.KITE_BACKEND_URL || 'http://localhost:3001';
-const MARKETPLACE_URL = process.env.KITE_MARKETPLACE_URL || 'http://localhost:3000';
-const KITE_EXPLORER_URL = 'https://testnet.kiteexplorer.com';
+const BACKEND_URL = process.env.KITE_BACKEND_URL || 'https://api.kite-marketplace.vercel.app' || 'http://localhost:3001';
+const MARKETPLACE_URL = process.env.KITE_MARKETPLACE_URL || 'https://kite-marketplace.vercel.app' || 'http://localhost:3000';
+const KITE_EXPLORER_URL = 'https://kitescan.ai';
 
 if (!BOT_TOKEN) {
   console.warn('⚠️  TELEGRAM_BOT_TOKEN is not set. Telegram bot surface will be skipped.');
@@ -43,22 +43,24 @@ You can use the following commands:
     }
 
     try {
+      console.log(`[Telegram] Searching for: ${query}`);
       const res = await fetch(`${BACKEND_URL}/api/listings?type=${query}`);
       const data = await res.json() as any;
       
-      if (!data.success || data.listings.length === 0) {
+      if (!data.success || !data.listings || data.listings.length === 0) {
         return ctx.reply(`No listings found for "${query}". Try api, dataset, article, or code.`);
       }
 
       let response = `Found ${data.listings.length} listings:\n\n`;
       data.listings.slice(0, 5).forEach((l: any) => {
         response += `*${l.name}*\n`;
-        response += `Type: ${l.type} | Price: ${l.priceUsdc} USDC\n`;
+        response += `Type: ${l.type} | Price: $${l.priceUsdc} USDC\n`;
         response += `ID: ${l.id}\n\n`;
       });
 
       ctx.reply(response);
     } catch (error) {
+      console.error('[Telegram] Search error:', error);
       ctx.reply('Failed to fetch listings. Is the backend running?');
     }
   });
@@ -105,31 +107,35 @@ Status: On-Chain Verified`);
     }
 
     try {
-      await ctx.reply(`Processing purchase for ${listingId}...`);
+      await ctx.reply(`🔄 Processing purchase for ${listingId}...`);
 
       // Step 1: Fetch listing details from backend
+      console.log(`[Telegram] Fetching listing from: ${BACKEND_URL}/api/listings/${listingId}`);
       const listingRes = await fetch(`${BACKEND_URL}/api/listings/${listingId}`);
       
       if (!listingRes.ok) {
-        return ctx.reply(`Listing ${listingId} not found.`);
+        console.error(`[Telegram] Listing fetch failed with status ${listingRes.status}`);
+        return ctx.reply(`❌ Listing ${listingId} not found (status: ${listingRes.status}).`);
       }
 
       const listingData = await listingRes.json() as any;
-      const listing = listingData.listing || listingData;
+      console.log(`[Telegram] Listing data received:`, JSON.stringify(listingData).substring(0, 200));
+      
+      // Handle different response structures
+      const listing = listingData.listing || listingData.data || listingData;
 
-      if (!listing) {
-        return ctx.reply(`Could not fetch listing details for ${listingId}.`);
+      if (!listing || !listing.id) {
+        console.error(`[Telegram] Invalid listing structure:`, listingData);
+        return ctx.reply(`❌ Could not parse listing details for ${listingId}.`);
       }
 
       const listingName = listing.name || 'Unnamed Resource';
-      const price = listing.priceUsdc || 0.50;
+      const price = listing.priceUsdc || listing.price_usdc || 0.50;
+
+      console.log(`[Telegram] Listing found: ${listingName} for $${price} USDC`);
 
       // Step 2: Execute x402 purchase by hitting the listing content endpoint
-      // The backend will return:
-      // - 402 if payment required (with payment link)
-      // - 200 with receipt if payment successful
-      // - 403 if payment verification fails
-      
+      console.log(`[Telegram] Attempting purchase from: ${MARKETPLACE_URL}/api/listings/${listingId}/content`);
       const purchaseRes = await fetch(`${MARKETPLACE_URL}/api/listings/${listingId}/content`, {
         method: 'GET',
         headers: {
@@ -137,38 +143,41 @@ Status: On-Chain Verified`);
         }
       });
 
+      console.log(`[Telegram] Purchase response status: ${purchaseRes.status}`);
+
       let txHash = '';
       let success = false;
       let message = '';
 
       if (purchaseRes.status === 402) {
         // Payment required - for Telegram demo, simulate successful payment
-        // In production, the Telegram bot would be part of an agent that:
-        // 1. Receives the 402 response with payment requirements
-        // 2. Signs and broadcasts a transaction on Kite Testnet
-        // 3. Includes the x402 payment header in a retry request
-        
-        // For now, generate a mock transaction hash to demonstrate flow
+        console.log('[Telegram] 402 Payment Required - generating mock tx');
         const mockTxHash = `0x${Math.random().toString(16).substring(2).padStart(64, '0')}`;
         txHash = mockTxHash;
         success = true;
-        message = `Purchase Simulation for "${listingName}"\n\nPrice: ${price} USDC\nStatus: AWAITING_PAYMENT\n\nIn production, transaction would execute on Kite Testnet.`;
+        message = `✅ Purchase Simulation: "${listingName}"\n\nPrice: $${price} USDC\nStatus: AWAITING_PAYMENT\n\nNote: In production, this executes real x402 payment on Kite Mainnet.`;
         
       } else if (purchaseRes.status === 200) {
         // Payment successful - receipt returned
+        console.log('[Telegram] 200 Success - parsing receipt');
         const receiptData = await purchaseRes.json() as any;
+        console.log('[Telegram] Receipt data:', JSON.stringify(receiptData).substring(0, 200));
+        
         txHash = receiptData.receipt?.txHash || 
                  receiptData.receipt?.transaction_hash || 
                  receiptData.receipt?.tx || 
+                 receiptData.txHash ||
                  `0x${Math.random().toString(16).substring(2).padStart(64, '0')}`;
         success = true;
-        message = `Purchase Complete: "${listingName}"\n\nPrice: ${price} USDC\nStatus: SUCCESS`;
+        message = `✅ Purchase Complete: "${listingName}"\n\nPrice: $${price} USDC\nStatus: SUCCESS`;
         
       } else if (purchaseRes.status === 403) {
-        // Payment verification failed
-        return ctx.reply(`Payment verification failed. Please ensure you have sufficient balance on Kite Testnet.`);
+        console.error('[Telegram] 403 Payment verification failed');
+        return ctx.reply(`❌ Payment verification failed. Ensure sufficient balance on Kite Mainnet.`);
       } else {
-        return ctx.reply(`Purchase failed with status ${purchaseRes.status}`);
+        const errorText = await purchaseRes.text();
+        console.error(`[Telegram] Purchase failed with status ${purchaseRes.status}: ${errorText}`);
+        return ctx.reply(`❌ Purchase failed with status ${purchaseRes.status}. Check marketplace API.`);
       }
 
       // Step 3: Reply with transaction hash and explorer link
@@ -176,15 +185,17 @@ Status: On-Chain Verified`);
         const explorerLink = `${KITE_EXPLORER_URL}/tx/${txHash}`;
         ctx.reply(`${message}
 
-Transaction Hash:
+📋 Transaction Hash:
 \`${txHash}\`
 
-View on Explorer:
+🔗 View on Explorer:
 ${explorerLink}`);
+      } else {
+        ctx.reply(`❌ Purchase simulation failed. Try again.`);
       }
     } catch (error: any) {
       console.error('[Telegram] Buy command error:', error);
-      ctx.reply(`Purchase failed: ${error.message || 'Unknown error'}`);
+      ctx.reply(`❌ Purchase failed: ${error.message || 'Unknown error'}\n\nDebug: Check backend at ${BACKEND_URL}`);
     }
   });
 
