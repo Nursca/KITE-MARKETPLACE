@@ -82,12 +82,17 @@ $$;
 alter table public.listings enable row level security;
 alter table public.sales    enable row level security;
 
+-- Drop any pre-existing policies (under either the legacy or current name)
+-- so this script remains idempotent across schema iterations.
+drop policy if exists "Public listings read" on public.listings;
+drop policy if exists "Public sales read"    on public.sales;
 drop policy if exists "listings public read" on public.listings;
+drop policy if exists "sales public read"    on public.sales;
+
 create policy "listings public read"
   on public.listings for select
   using (true);
 
-drop policy if exists "sales public read" on public.sales;
 create policy "sales public read"
   on public.sales for select
   using (true);
