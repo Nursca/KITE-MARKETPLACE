@@ -1,14 +1,27 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Shield, Zap, TrendingUp, Bot, FileText, CheckCircle2 } from 'lucide-react'
 
 const TIER_NAMES = ['Scout', 'Trader', 'Verified', 'Elite']
+const TIER_THRESHOLDS = [0, 10, 100, 500] // USDC thresholds for each tier
 const TIER_COLORS = [
   'text-slate-400 bg-slate-400/10 border-slate-400/20',
   'text-blue-400 bg-blue-400/10 border-blue-400/20',
   'text-green-400 bg-green-400/10 border-green-400/20',
   'text-primary bg-primary/10 border-primary/20',
 ]
+
+/**
+ * Calculate tier dynamically based on total volume earned
+ * Scout: $0, Trader: $10, Verified: $100, Elite: $500
+ */
+function calculateTier(totalEarnedUsdc: number): number {
+  if (totalEarnedUsdc >= TIER_THRESHOLDS[3]) return 3
+  if (totalEarnedUsdc >= TIER_THRESHOLDS[2]) return 2
+  if (totalEarnedUsdc >= TIER_THRESHOLDS[1]) return 1
+  return 0
+}
 
 interface PassportViewProps {
   agentId: string | null
@@ -18,8 +31,54 @@ interface PassportViewProps {
   isRegistering: boolean
 }
 
+interface CreatorStats {
+  totalEarnedUsdc: number
+  salesCount: number
+  error?: string
+}
+
 export function PassportView({ agentId, address, passport, onRegister, isRegistering }: PassportViewProps) {
+  const [creatorStats, setCreatorStats] = useState<CreatorStats>({ totalEarnedUsdc: 0, salesCount: 0 })
+  const [loadingStats, setLoadingStats] = useState(false)
+
   const truncateAddress = (addr: string) => `${addr.slice(0, 8)}...${addr.slice(-6)}`
+
+  // Fetch creator's earnings from live listings data
+  useEffect(() => {
+    if (!address || !agentId) return
+
+    const fetchCreatorStats = async () => {
+      try {
+        setLoadingStats(true)
+        const res = await fetch(`/api/listings?creatorAddress=${address}`)
+        if (res.ok) {
+          const data = await res.json()
+          const listings = data.listings || []
+          
+          // Calculate total earned and sales count from creator's listings
+          const totalEarned = listings.reduce((sum: number, l: any) => sum + (l.totalEarnedUsdc || 0), 0)
+          const totalSales = listings.reduce((sum: number, l: any) => sum + (l.salesCount || 0), 0)
+          
+          setCreatorStats({
+            totalEarnedUsdc: totalEarned,
+            salesCount: totalSales,
+          })
+        } else {
+          setCreatorStats({ totalEarnedUsdc: 0, salesCount: 0 })
+        }
+      } catch (error) {
+        console.error('[PassportView] Failed to fetch creator stats:', error)
+        setCreatorStats({ totalEarnedUsdc: 0, salesCount: 0, error: 'Failed to load stats' })
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+
+    fetchCreatorStats()
+    // Refresh stats every 30 seconds for live updates
+    const interval = setInterval(fetchCreatorStats, 30000)
+    return () => clearInterval(interval)
+  }, [address, agentId])
 
   if (!agentId) {
     return (
@@ -58,7 +117,8 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
     )
   }
 
-  const tier = passport?.tier || 0
+  const tier = calculateTier(creatorStats.totalEarnedUsdc)
+  const nextTierThreshold = tier < TIER_NAMES.length - 1 ? TIER_THRESHOLDS[tier + 1] : TIER_THRESHOLDS[tier]
 
   return (
     <section className="w-full bg-surface overflow-y-auto p-4 sm:p-6 lg:p-10">
@@ -75,11 +135,11 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
           </div>
           <div className="flex gap-4">
             <div className="text-right">
-              <p className="text-2xl font-headline italic text-primary">${passport?.totalVolume?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-headline italic text-primary">${creatorStats.totalEarnedUsdc.toFixed(2)}</p>
               <p className="text-[10px] uppercase tracking-widest opacity-50">Total Volume (USDC)</p>
             </div>
             <div className="text-right border-l border-outline-variant/20 pl-4">
-              <p className="text-2xl font-headline italic text-primary">{passport?.reputation || '5.0'}</p>
+              <p className="text-2xl font-headline italic text-primary">{(4.0 + (creatorStats.salesCount * 0.1)).toFixed(1)}</p>
               <p className="text-[10px] uppercase tracking-widest opacity-50">Trust Score</p>
             </div>
           </div>
@@ -109,7 +169,7 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
                 </div>
                 <div>
                   <label className="text-[10px] font-label uppercase tracking-widest opacity-40 block mb-1">CDP Agent Wallet</label>
-                  <p className="text-sm font-mono">0x742d...8f44e</p>
+                  <p className="text-sm font-mono">{address ? truncateAddress(address) : '—'}</p>
                 </div>
               </div>
 
@@ -147,8 +207,14 @@ export function PassportView({ agentId, address, passport, onRegister, isRegiste
             </div>
             <div className="mt-8 pt-6 border-t border-outline-variant/10">
               <p className="text-[10px] text-on-surface-variant opacity-60 leading-relaxed">
-                Next Tier: <strong>Verified</strong><br />
-                Requires $100.00 volume + 4.0 reputation.
+                {tier >= TIER_NAMES.length - 1 ? (
+                  <>You have reached Elite tier! 🎉</>
+                ) : (
+                  <>
+                    Next Tier: <strong>{TIER_NAMES[tier + 1]}</strong><br />
+                    Requires ${TIER_THRESHOLDS[tier + 1].toFixed(2)} volume. {creatorStats.totalEarnedUsdc >= TIER_THRESHOLDS[tier + 1] ? '✓ Unlocked!' : `${(TIER_THRESHOLDS[tier + 1] - creatorStats.totalEarnedUsdc).toFixed(2)} more to go.`}
+                  </>
+                )}
               </p>
             </div>
           </div>

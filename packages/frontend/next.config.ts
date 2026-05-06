@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         destination: "http://localhost:3001/api/stats",
       },
       {
+        source: "/api/sales/:path*",
+        destination: "http://localhost:3001/api/sales/:path*",
+      },
+      {
         source: "/api/mcp",
         destination: "http://localhost:3001/api/mcp",
       },
@@ -33,6 +37,16 @@ const nextConfig: NextConfig = {
         net: false,
         tls: false,
         accounts: false,
+      };
+
+      // Ignore unused wagmi connectors that require missing peer dependencies
+      // We only use injected() connector, so we can safely ignore these
+      config.externals = {
+        ...config.externals,
+        '@coinbase/wallet-sdk': 'commonjs @coinbase/wallet-sdk',
+        '@metamask/connect-evm': 'commonjs @metamask/connect-evm',
+        'porto': 'commonjs porto',
+        '@walletconnect/ethereum-provider': 'commonjs @walletconnect/ethereum-provider',
       };
     }
     return config;

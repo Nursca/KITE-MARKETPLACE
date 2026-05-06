@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAccount } from 'wagmi'
 import { ChatUI } from "@/components/ChatUI";
+import { TransactionFeed } from "@/components/TransactionFeed";
 import { useAppKit } from '@reown/appkit/react'
 import { Menu, X } from "lucide-react";
 import {
@@ -158,6 +159,9 @@ export default function Home() {
       {/* Live stats ticker */}
       <LiveStatsBanner stats={stats} />
 
+      {/* Live transaction feed (rotating ticker, polled every 8s) */}
+      <TransactionFeed />
+
       {/* TopNavBar */}
       <nav className="bg-background/85 backdrop-blur-xl sticky top-0 z-50 w-full border-b border-outline-variant/10">
         <div className="flex justify-between items-center w-full px-4 sm:px-6 md:px-12 py-4 md:py-5 max-w-[1440px] mx-auto">
@@ -171,6 +175,9 @@ export default function Home() {
             <a href="#marketplace" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
               Marketplace
             </a>
+            <Link href="/demo" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
+              A2A Demo
+            </Link>
             <Link href="/connect-shopify" className="font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 hover:opacity-100 transition-opacity">
               Connect Shopify
             </Link>
@@ -212,6 +219,9 @@ export default function Home() {
             <a href="#marketplace" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
               Marketplace
             </a>
+            <Link href="/demo" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
+              A2A Demo
+            </Link>
             <Link href="/connect-shopify" onClick={() => setMobileMenuOpen(false)} className="block font-label uppercase tracking-widest text-[11px] text-on-background opacity-70 py-2">
               Connect Shopify
             </Link>

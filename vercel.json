@@ -1,0 +1,11 @@
+{
+  "buildCommand": "pnpm run build",
+  "devCommand": "pnpm run dev",
+  "installCommand": "pnpm install",
+  "crons": [
+    {
+      "path": "/api/cron/agent-loop",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

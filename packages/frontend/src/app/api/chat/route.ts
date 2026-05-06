@@ -23,6 +23,27 @@ const products = productsData as Product[]
 
 export const runtime = 'nodejs'
 
+/**
+ * Get backend URL with fallback chain for environment-aware routing.
+ * Enables chat agent to work on Vercel, local dev, and cloud deployments.
+ * 
+ * Priority:
+ * 1. KITE_BACKEND_URL (explicitly set in Vercel env)
+ * 2. NEXT_PUBLIC_KITE_MARKETPLACE_API (frontend-accessible env var)
+ * 3. /api (route through Next.js frontend API proxy)
+ * 4. http://localhost:3001 (local development fallback)
+ */
+function getBackendUrl(): string {
+  if (process.env.KITE_BACKEND_URL) {
+    return process.env.KITE_BACKEND_URL;
+  }
+  if (process.env.NEXT_PUBLIC_KITE_MARKETPLACE_API) {
+    return process.env.NEXT_PUBLIC_KITE_MARKETPLACE_API;
+  }
+  // Route through Next.js frontend API (proxies to backend)
+  return '/api';
+}
+
 const SYSTEM_PROMPT = `You are KIMA, an autonomous AI commerce agent built on Kite AI — the first blockchain built for autonomous agents.
 
 You operate on the Kite Marketplace, a two-sided agentic economy where AI agents can both BUY and SELL digital resources using on-chain USDC micro-payments via the x402 protocol on Kite Testnet (chainId 2368).
@@ -57,10 +78,10 @@ export async function POST(req: Request) {
     console.log('[Chat API] Using provider:', process.env.GROQ_API_KEY ? 'Groq' : 'OpenAI');
 
     // Use Groq if API key is present, otherwise fallback to OpenAI
-    // Using llama-3.3-70b-versatile as it's the current旗舰 model
+    // Using latest stable models: llama-3.3-70b-versatile (Groq) and gpt-4o (OpenAI)
     const model = process.env.GROQ_API_KEY 
       ? groq('llama-3.3-70b-versatile')
-      : openai('gpt-4o-mini')
+      : openai('gpt-4o')
 
     const result = streamText({
       model,
@@ -98,9 +119,10 @@ export async function POST(req: Request) {
           }),
           execute: async ({ type, maxPrice }: { type?: string, maxPrice?: number }) => {
             try {
-              const resListings = await fetch(`http://localhost:3001/api/listings?type=${type || ''}&maxPrice=${maxPrice || ''}`);
+              const backendUrl = getBackendUrl();
+              const resListings = await fetch(`${backendUrl}/api/listings?type=${type || ''}&maxPrice=${maxPrice || ''}`);
               const { listings } = await resListings.json();
-              const resStats = await fetch('http://localhost:3001/api/stats');
+              const resStats = await fetch(`${backendUrl}/api/stats`);
               const stats = await resStats.json();
               return { listings, stats, count: listings.length }
             } catch (e: any) {
@@ -117,7 +139,8 @@ export async function POST(req: Request) {
           }),
           execute: async ({ listingId }: { listingId: string }) => {
             try {
-              const res = await fetch(`http://localhost:3001/api/listings/${listingId}/content`);
+              const backendUrl = getBackendUrl();
+              const res = await fetch(`${backendUrl}/api/listings/${listingId}/content`);
               if (!res.ok) return { success: false, error: 'Listing not found' }
               const data = await res.json();
               return { success: true, listing: data.listing }
@@ -148,7 +171,8 @@ export async function POST(req: Request) {
             creatorAddress: string
           }) => {
             try {
-              const res = await fetch('http://localhost:3001/api/listings', {
+              const backendUrl = getBackendUrl();
+              const res = await fetch(`${backendUrl}/api/listings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(args)
@@ -202,7 +226,8 @@ export async function POST(req: Request) {
           inputSchema: z.object({}),
           execute: async () => {
             try {
-              const res = await fetch('http://localhost:3001/api/stats');
+              const backendUrl = getBackendUrl();
+              const res = await fetch(`${backendUrl}/api/stats`);
               return res.json();
             } catch (e: any) {
               return { error: 'Backend service unavailable' };
