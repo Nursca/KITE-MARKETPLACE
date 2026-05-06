@@ -6,7 +6,7 @@ import { formatUnits, erc20Abi } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Lock, Unlock, Zap, Database, Code, FileText, Layers, TrendingUp, ExternalLink, Plus, ShoppingBag, Shield, Menu, X as XIcon } from 'lucide-react'
+import { Lock, Unlock, Zap, Database, Code, FileText, Layers, TrendingUp, ExternalLink, Plus, ShoppingBag, Shield, Menu, X as XIcon, Upload, File as FileIcon } from 'lucide-react'
 
 const USDC_ADDRESS = '0x534b2f3A21130d7a60830c2Df862319e593943A3'
 
@@ -776,6 +776,73 @@ function MerchantHub({ listings, myListings, myEarnings, address, creating, crea
   const [filterTab, setFilterTab] = useState<FilterTab>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
+  // File-upload state for the file/download listing flow.
+  // selectedFile is the locally staged File object the seller picked but has
+  // not yet uploaded. Once uploaded, createForm.content holds the JSON
+  // descriptor ({ kind:'blob', pathname, filename, size, contentType }) that
+  // the paywalled content endpoint reads to mint download URLs.
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const resetFileState = () => {
+    setSelectedFile(null)
+    setUploadError(null)
+    setUploading(false)
+    setCreateForm(f => ({ ...f, content: '' }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  }
+
+  const handlePickFile = (file: File) => {
+    setSelectedFile(file)
+    setUploadError(null)
+    // Clear any prior content so the submit button waits on this upload.
+    setCreateForm(f => ({ ...f, content: '' }))
+  }
+
+  const uploadStagedFile = async (): Promise<string | null> => {
+    if (!selectedFile) return null
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', selectedFile)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok || !json.success) {
+        const msg = json?.error || `Upload failed (${res.status})`
+        setUploadError(msg)
+        return null
+      }
+      // Encode the blob descriptor as the listing's hidden content payload.
+      // The backend content route detects kind:'blob' and replaces it with a
+      // signed download URL after on-chain payment verification.
+      const descriptor = JSON.stringify({
+        kind: 'blob',
+        pathname: json.pathname,
+        filename: json.filename,
+        size: json.size,
+        contentType: json.contentType,
+      })
+      setCreateForm(f => ({ ...f, content: descriptor }))
+      return descriptor
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Upload failed'
+      setUploadError(msg)
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const copyEndpoint = (id: string) => {
     const url = `${window.location.origin}/api/listings/${id}/content`
     navigator.clipboard.writeText(url)
@@ -789,10 +856,17 @@ function MerchantHub({ listings, myListings, myEarnings, address, creating, crea
     setStep('details')
   }
 
-  const handleSubmitAndBack = () => {
+  const handleSubmitAndBack = async () => {
+    // For file listings, ensure the file is uploaded to Blob storage and the
+    // descriptor is in createForm.content before triggering the create call.
+    if (selectedType === 'file' && selectedFile && !createForm.content) {
+      const descriptor = await uploadStagedFile()
+      if (!descriptor) return // Stay on the form so the seller sees the error.
+    }
     handleCreateListing()
     setStep('list')
     setSelectedType(null)
+    resetFileState()
   }
 
   const typeInfo = selectedType ? LISTING_TYPES_CONFIG.find(t => t.type === selectedType) : null
@@ -1058,16 +1132,105 @@ function MerchantHub({ listings, myListings, myEarnings, address, creating, crea
               </div>
               <div>
                 <label className="text-[10px] font-label uppercase tracking-widest text-primary block mb-1.5">
-                  🔒 {typeInfo.contentLabel} <span className="opacity-60 normal-case">(only revealed after payment)</span>
+                  {typeInfo.type === 'file' ? 'Upload file' : <>🔒 {typeInfo.contentLabel}</>} <span className="opacity-60 normal-case">(only revealed after payment)</span>
                 </label>
-                <textarea rows={typeInfo.type === 'article' || typeInfo.type === 'code' ? 6 : 3} value={createForm.content} onChange={e => setCreateForm(f => ({ ...f, content: e.target.value }))} placeholder={typeInfo.contentPlaceholder}
-                  className="w-full bg-surface-container border border-primary/20 rounded-lg px-3.5 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:outline-none resize-none font-mono" />
-                <p className="text-[10px] opacity-40 mt-1">Hidden behind x402 paywall — only buyers who pay on Kite Testnet see this</p>
+
+                {typeInfo.type === 'file' ? (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (f) handlePickFile(f)
+                      }}
+                    />
+
+                    {selectedFile ? (
+                      <div className="bg-surface-container border border-primary/20 rounded-lg px-4 py-3.5 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <FileIcon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                          <p className="text-[11px] opacity-60 mt-0.5">
+                            {formatBytes(selectedFile.size)}
+                            {createForm.content ? <span className="text-primary"> • Uploaded</span> : <span> • Will upload on submit</span>}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={resetFileState}
+                          className="shrink-0 p-1.5 hover:bg-surface-container-high rounded transition-colors"
+                          aria-label="Remove file"
+                        >
+                          <XIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          setIsDragging(true)
+                        }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          setIsDragging(false)
+                          const f = e.dataTransfer.files?.[0]
+                          if (f) handlePickFile(f)
+                        }}
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-lg border border-dashed cursor-pointer transition-colors ${
+                          isDragging
+                            ? 'border-primary bg-primary/5'
+                            : 'border-outline-variant/40 hover:border-primary/40 hover:bg-surface-container/60'
+                        }`}
+                      >
+                        <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                          <Upload className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm font-medium text-on-surface">Click to upload or drag and drop</p>
+                        <p className="text-[11px] opacity-60">PDF, ZIP, model, image — up to 25MB</p>
+                      </label>
+                    )}
+
+                    {uploading && (
+                      <p className="text-[11px] text-primary mt-2">Uploading to Vercel Blob…</p>
+                    )}
+                    {uploadError && (
+                      <p className="text-[11px] text-error mt-2">{uploadError}</p>
+                    )}
+                    <p className="text-[10px] opacity-40 mt-2">
+                      Stored in private Vercel Blob. Buyers receive a one-time signed download URL only after on-chain payment.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      rows={typeInfo.type === 'article' || typeInfo.type === 'code' ? 6 : 3}
+                      value={createForm.content}
+                      onChange={e => setCreateForm(f => ({ ...f, content: e.target.value }))}
+                      placeholder={typeInfo.contentPlaceholder}
+                      className="w-full bg-surface-container border border-primary/20 rounded-lg px-3.5 py-2.5 text-sm focus:ring-1 focus:ring-primary focus:outline-none resize-none font-mono"
+                    />
+                    <p className="text-[10px] opacity-40 mt-1">Hidden behind x402 paywall — only buyers who pay on Kite Testnet see this</p>
+                  </>
+                )}
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={handleSubmitAndBack} disabled={creating || !createForm.name || !createForm.content}
-                  className="flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 text-xs font-label uppercase tracking-widest disabled:opacity-50 hover:opacity-90 transition-opacity">
-                  {creating ? 'Creating...' : <><Plus className="h-3.5 w-3.5" /> Create listing</>}
+                <button
+                  onClick={handleSubmitAndBack}
+                  disabled={
+                    creating ||
+                    uploading ||
+                    !createForm.name ||
+                    (typeInfo.type === 'file' ? !selectedFile : !createForm.content)
+                  }
+                  className="flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 text-xs font-label uppercase tracking-widest disabled:opacity-50 hover:opacity-90 transition-opacity"
+                >
+                  {uploading ? 'Uploading…' : creating ? 'Creating…' : <><Plus className="h-3.5 w-3.5" /> Create listing</>}
                 </button>
                 <button onClick={() => setStep('list')} className="px-6 py-2.5 text-xs font-label uppercase tracking-widest border border-outline-variant/30 hover:bg-surface-container transition-colors">
                   Cancel

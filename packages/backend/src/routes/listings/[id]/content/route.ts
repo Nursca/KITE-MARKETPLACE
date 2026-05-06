@@ -2,6 +2,35 @@ import { Request, Response } from "express";
 import { listingStore } from "@/lib/listing-store";
 import { createPublicClient, http } from "viem";
 import { kiteTestnet } from "@kite/x402-sdk/erc8004";
+import { signDownloadToken } from "@/lib/blob-token";
+
+/**
+ * Parse a listing's hidden content as a blob descriptor. Sellers who upload a
+ * file via the marketplace UI store a JSON envelope here; legacy listings (URL
+ * or plain text) return null so we keep the existing behaviour for them.
+ */
+interface BlobDescriptor {
+  kind: "blob";
+  pathname: string;
+  filename: string;
+  size: number;
+  contentType: string;
+}
+
+function parseBlobDescriptor(content: string): BlobDescriptor | null {
+  if (!content || typeof content !== "string") return null;
+  const trimmed = content.trim();
+  if (!trimmed.startsWith("{")) return null;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && parsed.kind === "blob" && typeof parsed.pathname === "string") {
+      return parsed as BlobDescriptor;
+    }
+  } catch {
+    // Not JSON — treat as plain content.
+  }
+  return null;
+}
 
 const payTo = (
   process.env.PAYMENT_RECIPIENT_ADDRESS ||
@@ -155,6 +184,40 @@ export async function GET(req: Request, res: Response): Promise<void> {
 
     await listingStore.recordSale(listing.id, buyerAddress, txHash);
 
+    // Detect file/download listings (content is a JSON blob descriptor).
+    // For these, we never expose the underlying blob URL; instead we mint a
+    // short-lived HMAC-signed download URL that the buyer's client pulls from
+    // /api/listings/[id]/download (frontend route, streams via @vercel/blob get()).
+    const blob = parseBlobDescriptor(listing.content);
+
+    let file: {
+      filename: string;
+      size: number;
+      contentType: string;
+      downloadUrl: string;
+      expiresAt: number;
+    } | undefined;
+
+    if (blob) {
+      const appUrl =
+        process.env.KITE_MARKETPLACE_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        "https://kite-marketplace.vercel.app";
+      const token = signDownloadToken(blob.pathname);
+      const url = new URL(`${appUrl.replace(/\/$/, "")}/api/listings/${listing.id}/download`);
+      url.searchParams.set("p", token.pathname);
+      url.searchParams.set("e", String(token.expiresAt));
+      url.searchParams.set("s", token.signature);
+      url.searchParams.set("n", blob.filename);
+      file = {
+        filename: blob.filename,
+        size: blob.size,
+        contentType: blob.contentType,
+        downloadUrl: url.toString(),
+        expiresAt: token.expiresAt,
+      };
+    }
+
     res.status(200).json({
       success: true,
       listing: {
@@ -162,7 +225,10 @@ export async function GET(req: Request, res: Response): Promise<void> {
         name: listing.name,
         type: listing.type,
       },
-      content: listing.content,
+      // For blob-backed listings we hide the raw envelope and surface the
+      // download URL instead — the JSON pathname is server-only metadata.
+      content: blob ? null : listing.content,
+      file,
       receipt: {
         listingId: listing.id,
         listingName: listing.name,
