@@ -101,7 +101,6 @@ export const GET = withX402<ResourceResponse>(
       price: () => "$0.50",
       network: "eip155:2366",
       payTo,
-      description: "Kite Marketplace Resource Access"
     }
   },
   server
