@@ -78,10 +78,10 @@ export async function POST(req: Request) {
     console.log('[Chat API] Using provider:', process.env.GROQ_API_KEY ? 'Groq' : 'OpenAI');
 
     // Use Groq if API key is present, otherwise fallback to OpenAI
-    // Using llama-3.3-70b-versatile as it's the current旗舰 model
+    // Using latest stable models: llama-3.3-70b-versatile (Groq) and gpt-4o (OpenAI)
     const model = process.env.GROQ_API_KEY 
       ? groq('llama-3.3-70b-versatile')
-      : openai('gpt-4o-mini')
+      : openai('gpt-4o')
 
     const result = streamText({
       model,
