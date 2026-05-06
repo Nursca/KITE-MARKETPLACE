@@ -34,6 +34,16 @@ const nextConfig: NextConfig = {
         tls: false,
         accounts: false,
       };
+
+      // Ignore unused wagmi connectors that require missing peer dependencies
+      // We only use injected() connector, so we can safely ignore these
+      config.externals = {
+        ...config.externals,
+        '@coinbase/wallet-sdk': 'commonjs @coinbase/wallet-sdk',
+        '@metamask/connect-evm': 'commonjs @metamask/connect-evm',
+        'porto': 'commonjs porto',
+        '@walletconnect/ethereum-provider': 'commonjs @walletconnect/ethereum-provider',
+      };
     }
     return config;
   },
