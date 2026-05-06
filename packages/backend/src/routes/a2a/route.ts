@@ -67,12 +67,12 @@ async function handleMessageSend(id: any, params: any) {
           role: "assistant",
           parts: [{
             type: "text", 
-            text: `Payment required for ${dataPart.name || 'item'}. Please pay ${dataPart.priceUsdc || '0.50'} USDC to 0xb23c769dFc7ef020ec60A19567aB675C46a49910 on Kite Testnet.`
+            text: `Payment required for ${dataPart.name || 'item'}. Please pay ${dataPart.priceUsdc || '0.50'} USDC to 0xb23c769dFc7ef020ec60A19567aB675C46a49910 on Kite Mainnet.`
           }, {
             type: "data",
             data: {
               extensionUri: "https://x402.org/v2",
-              networks: [{ network: "kite-testnet", chainId: 2368 }],
+              networks: [{ network: "kite-mainnet", chainId: 2366 }],
               asset: "USDC",
               amount: (dataPart.priceUsdc || 0.50).toString(),
               payTo: "0xb23c769dFc7ef020ec60A19567aB675C46a49910",

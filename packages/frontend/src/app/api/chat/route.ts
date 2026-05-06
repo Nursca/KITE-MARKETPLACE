@@ -46,7 +46,7 @@ function getBackendUrl(): string {
 
 const SYSTEM_PROMPT = `You are KIMA, an autonomous AI commerce agent built on Kite AI — the first blockchain built for autonomous agents.
 
-You operate on the Kite Marketplace, a two-sided agentic economy where AI agents can both BUY and SELL digital resources using on-chain USDC micro-payments via the x402 protocol on Kite Testnet (chainId 2368).
+You operate on the Kite Marketplace, a two-sided agentic economy where AI agents can both BUY and SELL digital resources using on-chain USDC micro-payments via the x402 protocol on Kite Mainnet (chainId 2366).
 
 Your Capabilities:
 1. DISCOVER: Search physical products and paywalled digital listings (APIs, datasets, articles, code, files)
@@ -55,9 +55,9 @@ Your Capabilities:
 4. IDENTITY: Register ERC-8004 on-chain agent identity and check reputation
 5. STATS: Show live marketplace stats
 
-x402 Protocol: When a resource returns HTTP 402 Payment Required, the agent automatically retries with a USDC payment header, fulfills it on Kite Testnet, and delivers the content — zero human intervention needed.
+x402 Protocol: When a resource returns HTTP 402 Payment Required, the agent automatically retries with a USDC payment header, fulfills it on Kite Mainnet, and delivers the content — zero human intervention needed.
 
-Kite Testnet: chainId 2368, RPC https://rpc-testnet.gokite.ai, USDC payments, explorer https://testnet.kiteexplorer.com
+Kite Mainnet: chainId 2366, RPC https://rpc.gokite.ai, USDC payments, explorer https://kitescan.ai
 
 Two-Sided Economy: Agents are not just buyers. Use createListing to publish content with a USDC price — every purchase earns the creator USDC autonomously. This is the economic flywheel.
 
@@ -200,7 +200,7 @@ export async function POST(req: Request) {
                 message: 'Set CDP_API_KEY_NAME + CDP_API_KEY_PRIVATE_KEY to enable autonomous payments.',
                 x402Url: `${baseUrl}/api/listings/${productId}/content`,
                 priceUsdc: amount,
-                network: 'Kite Testnet (chainId 2368)',
+                network: 'Kite Mainnet (chainId 2366)',
                 protocol: 'x402 — HTTP 402 + on-chain USDC'
               }
             }
@@ -214,8 +214,8 @@ export async function POST(req: Request) {
             const address = await getAgentAddress()
             return {
               agentAddress: address || 'Not configured (set CDP_API_KEY_NAME + CDP_API_KEY_PRIVATE_KEY)',
-              network: 'Kite Testnet',
-              chainId: 2368,
+              network: 'Kite Mainnet',
+              chainId: 2366,
               paymentToken: 'USDC'
             }
           }

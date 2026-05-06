@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAccount } from 'wagmi'
 import { ChatUI } from "@/components/ChatUI";
+import { TransactionFeed } from "@/components/TransactionFeed";
 import { useAppKit } from '@reown/appkit/react'
 import { Menu, X } from "lucide-react";
 import {
@@ -56,7 +57,7 @@ function LiveStatsBanner({ stats }: { stats: Stats | null }) {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 sm:gap-10 text-[11px] font-label uppercase tracking-widest">
         <span className="flex items-center gap-1.5 text-on-surface-variant">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          Live on Kite Testnet
+          Live on Kite Mainnet
         </span>
         <span className="text-on-surface-variant">
           <span className="text-primary font-bold">{stats.totalListings}</span> listings
@@ -157,6 +158,9 @@ export default function Home() {
     <div className="min-h-screen bg-background text-on-background font-body">
       {/* Live stats ticker */}
       <LiveStatsBanner stats={stats} />
+
+      {/* Live transaction feed */}
+      <TransactionFeed />
 
       {/* TopNavBar */}
       <nav className="bg-background/85 backdrop-blur-xl sticky top-0 z-50 w-full border-b border-outline-variant/10">

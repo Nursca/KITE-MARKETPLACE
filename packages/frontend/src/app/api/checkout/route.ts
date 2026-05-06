@@ -10,7 +10,7 @@ const payTo = (process.env.PAYMENT_RECIPIENT_ADDRESS || "0xb23c769dFc7ef020ec60A
 
 const facilitator = new HTTPFacilitatorClient({ url: facilitatorUrl });
 const server = new x402ResourceServer(facilitator)
-  .register("eip155:2368", new ExactEvmScheme());
+  .register("eip155:2366", new ExactEvmScheme());
 
 interface CheckoutResponse {
   success?: boolean;
