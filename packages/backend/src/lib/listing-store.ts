@@ -279,17 +279,29 @@ class ListingStore {
   async getStats() {
     if (this.isUsingSupabase && this.supabase) {
       const { count: totalListings } = await this.supabase.from('listings').select('*', { count: 'exact', head: true });
+      
+      // Fix: Join sales with listings to get actual revenue, not just list prices
       const { data: salesData } = await this.supabase.from('sales').select('listing_id');
       const { data: listingsData } = await this.supabase.from('listings').select('price_usdc, creator_address');
       
-      const totalSales = salesData?.length || 0;
-      const totalVolumeUsdc = listingsData?.reduce((acc: any, l: any) => acc + (l.price_usdc || 0), 0) || 0; // naive sum
+      // Calculate volume from actual sales (not all listings)
+      let totalVolumeUsdc = 0;
+      if (salesData && listingsData) {
+        const listingMap = new Map(listingsData.map((l: any) => [l.id, l.price_usdc]));
+        totalVolumeUsdc = salesData.reduce((acc: number, sale: any) => {
+          return acc + (listingMap.get(sale.listing_id) || 0);
+        }, 0);
+      }
+      
+      // Dynamic activeAgents count: count distinct creators with listings
+      const uniqueCreators = new Set((listingsData || []).map((l: any) => l.creator_address).filter(Boolean));
+      const activeAgents = uniqueCreators.size;
 
       return {
         totalListings: totalListings || 0,
-        totalSales,
+        totalSales: salesData?.length || 0,
         totalVolumeUsdc: parseFloat(totalVolumeUsdc.toFixed(2)),
-        activeAgents: 124, 
+        activeAgents, // Dynamic count of unique creators
         topSellers: [] // Implementation for top sellers would go here
       };
     }
@@ -299,11 +311,17 @@ class ListingStore {
       return acc + (listing?.priceUsdc || 0);
     }, 0);
 
+    // Dynamic activeAgents: count unique creators in listings
+    const uniqueCreators = new Set();
+    this.listings.forEach((listing: any) => {
+      if (listing.creatorAddress) uniqueCreators.add(listing.creatorAddress);
+    });
+
     return {
       totalListings: this.listings.size,
       totalSales: this.sales.length,
       totalVolumeUsdc: parseFloat(totalVolume.toFixed(2)),
-      activeAgents: 124,
+      activeAgents: uniqueCreators.size, // Dynamic count
       topSellers: [
         { address: "0xb23c769dFc7ef020ec60A19567aB675C46a49910", sales: 42 },
         { address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e", sales: 18 }
