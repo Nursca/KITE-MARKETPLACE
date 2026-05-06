@@ -10,11 +10,10 @@ const payTo = (process.env.PAYMENT_RECIPIENT_ADDRESS || "0xb23c769dFc7ef020ec60A
 
 const facilitator = new HTTPFacilitatorClient({ url: facilitatorUrl });
 const server = new x402ResourceServer(facilitator)
-  .register("eip155:2368", new ExactEvmScheme());
+  .register("eip155:2366", new ExactEvmScheme());
 
 /**
  * Get backend URL for listing lookups
- * Allows x402 resource route to fetch live listing data instead of using hardcoded mock resources
  */
 function getBackendUrl(): string {
   if (process.env.KITE_BACKEND_URL) {
@@ -34,14 +33,18 @@ interface ResourceResponse {
   error?: string;
 }
 
-async function handler(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ResourceResponse>> {
+/**
+ * Handler for x402 resource access
+ * Signature matches withX402 expectations: (request: NextRequest) => Promise<NextResponse>
+ */
+async function handler(req: NextRequest): Promise<NextResponse<ResourceResponse>> {
   try {
-    const { id } = await context.params;
+    // Extract listing ID from URL path
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split('/');
+    const id = pathParts[pathParts.length - 1];
 
-    // Fetch listing from backend (unified data source instead of hardcoded mock)
+    // Fetch listing from backend
     let resource: any = null;
     try {
       const backendUrl = getBackendUrl();
@@ -71,7 +74,7 @@ async function handler(
       };
     }
 
-    // x402 handler receives verified payment context from middleware
+    // Return resource content after x402 payment verification
     return NextResponse.json({
       success: true,
       message: "Access granted!",
@@ -95,11 +98,8 @@ export const GET = withX402<ResourceResponse>(
   {
     accepts: {
       scheme: "exact",
-      price: (context) => {
-        // In a real app, extract from listing data
-        return "$0.50";
-      },
-      network: "eip155:2368",
+      price: () => "$0.50",
+      network: "eip155:2366",
       payTo,
       description: "Kite Marketplace Resource Access"
     }

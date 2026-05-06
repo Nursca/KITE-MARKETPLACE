@@ -1,6 +1,6 @@
 import { http } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors'
+import { injected, walletConnect } from 'wagmi/connectors'
 import { kiteTestnet } from '@kite/x402-sdk'
 
 // Export it so it can be used in other files
@@ -20,9 +20,6 @@ export const wagmiAdapter = new WagmiAdapter({
   connectors: [
     injected(),
     walletConnect({ projectId }),
-    coinbaseWallet({
-        appName: 'Kite Marketplace',
-    }),
   ],
   transports: {
     [kiteTestnet.id]: http(),
