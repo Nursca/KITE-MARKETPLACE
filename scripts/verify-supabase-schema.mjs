@@ -47,10 +47,33 @@ const listings = await checkTable(
 );
 const sales = await checkTable("sales", "id, listing_id, buyer_address, tx_hash, timestamp");
 
+// Probe the record_sale RPC. We pass garbage args expecting either a
+// "Listing not found" exception (RPC exists, schema applied) or a 404 from
+// PostgREST (RPC missing, migration not yet run).
+async function checkRpc() {
+  const { error } = await supabase.rpc("record_sale", {
+    p_listing_id: "__verify_probe_does_not_exist__",
+    p_buyer_address: "0x0000000000000000000000000000000000000000",
+    p_tx_hash: "0x" + "0".repeat(64),
+  });
+  if (!error) return { exists: true };
+  // PostgREST returns PGRST202 / 404 when the function isn't defined.
+  if (
+    error.code === "PGRST202" ||
+    /not find the function|does not exist/i.test(error.message)
+  ) {
+    return { exists: false, error: error.message };
+  }
+  // Any other error (e.g. our "Listing not found") means the function exists.
+  return { exists: true };
+}
+
+const rpc = await checkRpc();
+
 console.log("");
 console.log("=== Supabase Schema Verification ===");
 console.log("");
-console.log(`listings table: ${listings.exists ? "OK" : "MISSING"}`);
+console.log(`listings table:    ${listings.exists ? "OK" : "MISSING"}`);
 if (listings.exists) {
   console.log(`  rows: ${listings.count}`);
   if (listings.sample) {
@@ -61,7 +84,7 @@ if (listings.exists) {
 }
 
 console.log("");
-console.log(`sales table:    ${sales.exists ? "OK" : "MISSING"}`);
+console.log(`sales table:       ${sales.exists ? "OK" : "MISSING"}`);
 if (sales.exists) {
   console.log(`  rows: ${sales.count}`);
 } else {
@@ -69,12 +92,17 @@ if (sales.exists) {
 }
 
 console.log("");
+console.log(`record_sale RPC:   ${rpc.exists ? "OK" : "MISSING"}`);
+if (!rpc.exists) console.log(`  error: ${rpc.error}`);
 
-if (listings.exists && sales.exists) {
-  console.log("Schema is ready. listing-store.ts will use Supabase on next backend boot.");
+console.log("");
+
+if (listings.exists && sales.exists && rpc.exists) {
+  console.log("Schema is fully applied. listing-store.ts will use Supabase on next backend boot.");
   process.exit(0);
 }
 
-console.log("One or more tables are missing. Open the Supabase SQL Editor for your");
-console.log("project and run the SQL in DATABASE.md (sections 1 and 2) to create them.");
+console.log("Schema is incomplete. Apply scripts/supabase-schema.sql via either:");
+console.log("  - node scripts/apply-supabase-schema.mjs   (with SUPABASE_DB_URL set), or");
+console.log("  - Supabase Dashboard -> SQL Editor -> paste scripts/supabase-schema.sql.");
 process.exit(2);

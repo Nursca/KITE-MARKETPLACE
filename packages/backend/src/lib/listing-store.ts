@@ -239,27 +239,39 @@ class ListingStore {
 
   async recordSale(listingId: string, buyerAddress: string, txHash: string) {
     if (this.isUsingSupabase && this.supabase) {
+      // Prefer the atomic record_sale RPC (defined in scripts/supabase-schema.sql)
+      // which inserts the sale and bumps the listing counters in a single
+      // transaction, eliminating the read-modify-write race condition.
+      const { error: rpcErr } = await this.supabase.rpc('record_sale', {
+        p_listing_id: listingId,
+        p_buyer_address: buyerAddress,
+        p_tx_hash: txHash,
+      });
+
+      if (!rpcErr) return;
+
+      // RPC missing (older deployment, schema not yet applied) — fall back
+      // to the two-step path so we never silently drop a sale.
+      console.warn('[listingStore] record_sale RPC unavailable, using fallback:', rpcErr.message);
+
       const listing = await this.get(listingId);
       if (!listing) return;
 
-      const sale: any = {
+      const { error: saleErr } = await this.supabase.from('sales').insert([{
         listing_id: listingId,
         buyer_address: buyerAddress,
         tx_hash: txHash,
-        timestamp: new Date().toISOString()
-      };
-
-      // Atomic update for salesCount and earned
-      const { error: saleErr } = await this.supabase.from('sales').insert([sale]);
+        timestamp: new Date().toISOString(),
+      }]);
       const { error: listErr } = await this.supabase
         .from('listings')
-        .update({ 
+        .update({
           sales_count: listing.salesCount + 1,
-          total_earned_usdc: listing.totalEarnedUsdc + listing.priceUsdc
+          total_earned_usdc: listing.totalEarnedUsdc + listing.priceUsdc,
         })
         .eq('id', listingId);
 
-      if (saleErr || listErr) console.error("Supabase recordSale error:", saleErr || listErr);
+      if (saleErr || listErr) console.error('[listingStore] Supabase recordSale error:', saleErr || listErr);
     } else {
       const listing = this.listings.get(listingId);
       if (listing) {
