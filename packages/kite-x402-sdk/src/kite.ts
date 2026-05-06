@@ -24,28 +24,3 @@ export const kiteTestnet = defineChain({
   },
   testnet: true,
 })
-
-export const kiteMainnet = defineChain({
-  id: 2366,
-  name: 'Kite Mainnet',
-  nativeCurrency: {
-    name: 'KITE',
-    symbol: 'KITE',
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: [
-        (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_KITE_MAINNET_RPC : undefined) ?? 
-        'https://rpc.gokite.ai/'
-      ],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'Kite Scan',
-      url: 'https://kitescan.ai',
-    },
-  },
-  testnet: false,
-})

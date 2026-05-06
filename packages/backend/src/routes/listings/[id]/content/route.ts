@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
 import { listingStore } from "@/lib/listing-store";
 import { createPublicClient, http } from "viem";
-import { kiteMainnet } from "@kite/x402-sdk/erc8004";
+import { kiteTestnet } from "@kite/x402-sdk/erc8004";
 
 const payTo = (
   process.env.PAYMENT_RECIPIENT_ADDRESS ||
   "0xb23c769dFc7ef020ec60A19567aB675C46a49910"
 ) as `0x${string}`;
 
-const KITE_RPC = process.env.KITE_MAINNET_RPC || "https://rpc.gokite.ai/";
+const KITE_RPC = "https://rpc-testnet.gokite.ai/";
 const X402_FACILITATOR_URL = process.env.X402_FACILITATOR_URL || "https://x402-facilitator.molandak.org";
 
-// Create a public client for on-chain verification on Kite Mainnet
+// Create a public client for on-chain verification
 const publicClient = createPublicClient({
-  chain: kiteMainnet,
+  chain: kiteTestnet,
   transport: http(KITE_RPC),
 });
 
@@ -168,7 +168,7 @@ export async function GET(req: Request, res: Response): Promise<void> {
         listingName: listing.name,
         amountPaid: `${listing.priceUsdc} USDC`,
         txHash,
-        explorerUrl: `https://kitescan.ai/tx/${txHash}`,
+        explorerUrl: `https://testnet.kiteexplorer.com/tx/${txHash}`,
         timestamp: new Date().toISOString(),
         passportIdentity: passportData,
       },
