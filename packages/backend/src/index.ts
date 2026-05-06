@@ -30,6 +30,19 @@ app.get('/api/stats', async (req, res) => {
   res.json(stats);
 });
 
+// Recent sales feed — drives homepage live transaction ticker (polled every 8s)
+app.get('/api/sales/recent', async (req, res) => {
+  const requestedLimit = req.query.limit ? Number(req.query.limit) : 20;
+  const limit = Math.max(1, Math.min(50, isNaN(requestedLimit) ? 20 : requestedLimit));
+  const sales = await listingStore.getRecentSales(limit);
+  res.json({
+    success: true,
+    count: sales.length,
+    sales,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`Kite Backend listening at http://localhost:${port}`);

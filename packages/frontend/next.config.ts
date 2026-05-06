@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         destination: "http://localhost:3001/api/stats",
       },
       {
+        source: "/api/sales/:path*",
+        destination: "http://localhost:3001/api/sales/:path*",
+      },
+      {
         source: "/api/mcp",
         destination: "http://localhost:3001/api/mcp",
       },

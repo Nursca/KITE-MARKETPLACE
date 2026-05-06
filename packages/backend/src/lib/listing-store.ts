@@ -276,6 +276,75 @@ class ListingStore {
     }
   }
 
+  /**
+   * getRecentSales — returns the most recent sales joined with their listing
+   * metadata (name, price). Used to power the homepage live transaction feed
+   * and the /demo page summary. Defaults to 20 most recent.
+   */
+  async getRecentSales(limit = 20): Promise<Array<{
+    buyerAddress: string;
+    txHash: string;
+    timestamp: string;
+    listingId: string;
+    listingName: string;
+    listingType: string;
+    priceUsdc: number;
+  }>> {
+    if (this.isUsingSupabase && this.supabase) {
+      const { data: sales, error } = await this.supabase
+        .from('sales')
+        .select('listing_id, buyer_address, tx_hash, timestamp')
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+
+      if (error || !sales) {
+        console.error("Supabase getRecentSales error:", error);
+        return [];
+      }
+
+      const listingIds = Array.from(new Set(sales.map((s: any) => s.listing_id)));
+      if (listingIds.length === 0) return [];
+
+      const { data: listings } = await this.supabase
+        .from('listings')
+        .select('id, name, type, price_usdc')
+        .in('id', listingIds);
+
+      const listingMap = new Map((listings || []).map((l: any) => [l.id, l]));
+
+      return sales.map((s: any) => {
+        const listing = listingMap.get(s.listing_id) as any;
+        return {
+          buyerAddress: s.buyer_address,
+          txHash: s.tx_hash,
+          timestamp: s.timestamp,
+          listingId: s.listing_id,
+          listingName: listing?.name || 'Unknown Listing',
+          listingType: listing?.type || 'unknown',
+          priceUsdc: Number(listing?.price_usdc || 0),
+        };
+      });
+    }
+
+    // Local in-memory fallback. Sales are appended chronologically; reverse for newest-first.
+    return this.sales
+      .slice()
+      .reverse()
+      .slice(0, limit)
+      .map((s) => {
+        const listing = this.listings.get(s.listingId);
+        return {
+          buyerAddress: s.buyerAddress,
+          txHash: s.txHash,
+          timestamp: s.timestamp,
+          listingId: s.listingId,
+          listingName: listing?.name || 'Unknown Listing',
+          listingType: listing?.type || 'unknown',
+          priceUsdc: Number(listing?.priceUsdc || 0),
+        };
+      });
+  }
+
   async getStats() {
     if (this.isUsingSupabase && this.supabase) {
       const { count: totalListings } = await this.supabase.from('listings').select('*', { count: 'exact', head: true });
