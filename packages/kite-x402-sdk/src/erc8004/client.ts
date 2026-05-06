@@ -20,13 +20,14 @@ import {
   AGENT_PASSPORT_ABI,
 } from "./abis";
 
+// Kite Testnet (chainId 2368) deployed contracts from DeployERC8004.s.sol
 export const ERC8004_CONTRACTS = {
   identityRegistry:
-    "0x7096C8FD97a399ec59C8DF7055329223821b46F1" as Address,
+    "0x9788b77d09e2d189b9c7e1d392b7f762d5650a3a" as Address,
   reputationRegistry:
-    "0xc14d1eE6daCfe757cef570B339Ff8Ea7084bf354" as Address,
+    "0xead31017a6ca6cee1bb1bf7c1413cb7071e2b51d" as Address,
   validationRegistry:
-    "0x4fb2aBD8279659187B2792FfA6fE9a4837D4b411" as Address,
+    "0x93ee9c875648846ba16ff6f6733ebf4659d4bcbe" as Address,
   agentPassport:
     "0x5FbDB2315678afecb367f032d93F642f64180aa3" as Address, // Placeholder for local/testnet deployment
 } as const;
