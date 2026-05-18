@@ -35,7 +35,7 @@ async function runAgent(prompt, modelType) {
     console.log(chalk_1.default.yellow(`\n🚀 KIMA Agent starting (Model: ${modelType})...\n`));
     let model;
     if (modelType === 'anthropic') {
-        model = (0, anthropic_1.anthropic)('claude-3-5-sonnet-20240620');
+        model = (0, anthropic_1.anthropic)('claude-sonnet-4-6');
     }
     else if (modelType === 'groq') {
         model = (0, groq_1.groq)('llama-3.3-70b-versatile');
