@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withX402, x402ResourceServer } from "@x402/next";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { extractAndVerifyPayment } from "@/lib/payment-verification";
 
 export const runtime = 'nodejs';
 
@@ -22,31 +23,36 @@ interface CheckoutResponse {
   error?: string;
 }
 
+/**
+ * Handler for checkout
+ * CRITICAL: This handler now verifies all payments on-chain before returning receipt.
+ * This prevents the payment bypass vulnerability where ANY X-PAYMENT header was accepted.
+ */
 async function handler(req: NextRequest): Promise<NextResponse<CheckoutResponse>> {
   try {
     const body = await req.json();
     const { items } = body;
     
-    // Get transaction hash from payment headers
-    const paymentHeader = req.headers.get('payment-signature') || req.headers.get('x-payment');
-    let txHash = '0x...';
-    
-    if (paymentHeader) {
-      try {
-        // x402 v2 uses base64 encoded JSON for payment-signature
-        const decoded = JSON.parse(Buffer.from(paymentHeader, 'base64').toString());
-        txHash = decoded.payload?.transactionHash || decoded.payload?.hash || txHash;
-      } catch (e) {
-        console.error('Failed to decode payment header:', e);
-      }
+    // CRITICAL SECURITY CHECK: Verify payment before processing checkout
+    console.log(`[Checkout] Processing checkout request`);
+    const paymentInfo = await extractAndVerifyPayment(req.headers);
+
+    if (!paymentInfo.isValid) {
+      console.warn(`[Checkout] Rejected checkout: ${paymentInfo.error}`);
+      return NextResponse.json(
+        { error: paymentInfo.error || "Payment verification failed" },
+        { status: 402 }
+      );
     }
+
+    console.log(`[Checkout] ✓ Payment verified (tx: ${paymentInfo.txHash})`);
 
     const total = req.nextUrl.searchParams.get('total') || '0';
     
     return NextResponse.json({
       success: true,
-      txHash,
-      explorerUrl: `https://testnet.kiteexplorer.com/tx/${txHash}`,
+      txHash: paymentInfo.txHash,
+      explorerUrl: `https://testnet.kiteexplorer.com/tx/${paymentInfo.txHash}`,
       timestamp: new Date().toISOString(),
       totalPaid: total,
       items

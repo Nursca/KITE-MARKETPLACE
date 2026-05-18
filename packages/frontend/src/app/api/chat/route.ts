@@ -35,12 +35,19 @@ export const runtime = 'nodejs'
  */
 function getBackendUrl(): string {
   if (process.env.KITE_BACKEND_URL) {
+    console.log('[Chat API] Backend URL source: KITE_BACKEND_URL (Vercel env)');
     return process.env.KITE_BACKEND_URL;
   }
   if (process.env.NEXT_PUBLIC_KITE_MARKETPLACE_API) {
+    console.log('[Chat API] Backend URL source: NEXT_PUBLIC_KITE_MARKETPLACE_API');
     return process.env.NEXT_PUBLIC_KITE_MARKETPLACE_API;
   }
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Chat API] Backend URL source: localhost:3001 (local dev fallback)');
+    return 'http://localhost:3001';
+  }
   // Route through Next.js frontend API (proxies to backend)
+  console.log('[Chat API] Backend URL source: /api (Next.js proxy)');
   return '/api';
 }
 
@@ -120,6 +127,7 @@ export async function POST(req: Request) {
           execute: async ({ type, maxPrice }: { type?: string, maxPrice?: number }) => {
             try {
               const backendUrl = getBackendUrl();
+              console.log(`[Tool browseListings] Fetching from ${backendUrl}/api/listings`);
               const resListings = await fetch(`${backendUrl}/api/listings?type=${type || ''}&maxPrice=${maxPrice || ''}`);
               const { listings } = await resListings.json();
               const resStats = await fetch(`${backendUrl}/api/stats`);
@@ -140,6 +148,7 @@ export async function POST(req: Request) {
           execute: async ({ listingId }: { listingId: string }) => {
             try {
               const backendUrl = getBackendUrl();
+              console.log(`[Tool previewListing] Fetching from ${backendUrl}/api/listings/${listingId}/content`);
               const res = await fetch(`${backendUrl}/api/listings/${listingId}/content`);
               if (!res.ok) return { success: false, error: 'Listing not found' }
               const data = await res.json();
@@ -172,6 +181,7 @@ export async function POST(req: Request) {
           }) => {
             try {
               const backendUrl = getBackendUrl();
+              console.log(`[Tool createListing] Posting to ${backendUrl}/api/listings`);
               const res = await fetch(`${backendUrl}/api/listings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -194,7 +204,7 @@ export async function POST(req: Request) {
             try {
               return await executeAgentPurchase(productId, amount)
             } catch (error: any) {
-              const baseUrl = process.env.KITE_MARKETPLACE_URL || 'http://localhost:3000'
+              const baseUrl = getBackendUrl() || 'http://localhost:3001'
               return {
                 status: 'wallet_not_configured',
                 message: 'Set CDP_API_KEY_NAME + CDP_API_KEY_PRIVATE_KEY to enable autonomous payments.',
@@ -227,6 +237,7 @@ export async function POST(req: Request) {
           execute: async () => {
             try {
               const backendUrl = getBackendUrl();
+              console.log(`[Tool getMarketplaceStats] Fetching from ${backendUrl}/api/stats`);
               const res = await fetch(`${backendUrl}/api/stats`);
               return res.json();
             } catch (e: any) {
