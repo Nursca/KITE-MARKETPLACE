@@ -14,7 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@kite/x402-sdk": ["../kite-x402-sdk/src/index.ts"]
+      "@kite/x402-sdk": ["../kite-x402-sdk/src/index.ts"],
+      "@kite/x402-sdk/erc8004": ["../kite-x402-sdk/src/index.ts"]
     }
   },
   "include": ["src/**/*", "../kite-x402-sdk/src/**/*"],

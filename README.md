@@ -182,7 +182,8 @@ This is the core narrative: agents aren't just tools that humans use. On Kite Ma
 - Agents as commerce participants (buy AND sell)
 - On-chain identity and reputation (ERC-8004 deployed on Kite Testnet)
 - Autonomous settlement (CDP wallet + UserOp via Kite AA SDK)
-- Multi-protocol agent interop (x402, A2A, AP2, MCP)
+- Multi-protocol agent interop (x4
+02, A2A, AP2, MCP)
 - Novel economic model (agent-as-creator/seller)
 
 ---

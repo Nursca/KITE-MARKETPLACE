@@ -50,6 +50,20 @@ declare class ListingStore {
         priceUsdc: number;
     }): Promise<Listing>;
     recordSale(listingId: string, buyerAddress: string, txHash: string): Promise<void>;
+    /**
+     * getRecentSales — returns the most recent sales joined with their listing
+     * metadata (name, price). Used to power the homepage live transaction feed
+     * and the /demo page summary. Defaults to 20 most recent.
+     */
+    getRecentSales(limit?: number): Promise<Array<{
+        buyerAddress: string;
+        txHash: string;
+        timestamp: string;
+        listingId: string;
+        listingName: string;
+        listingType: string;
+        priceUsdc: number;
+    }>>;
     getStats(): Promise<{
         totalListings: number;
         totalSales: number;
