@@ -178,12 +178,12 @@ This is the core narrative: agents aren't just tools that humans use. On Kite Ma
 ## Hackathon Track Alignment
 
 **Agentic Commerce Track:**
-- ✅ AI agents conducting on-chain payments (x402 + Kite AA SDK)
-- ✅ Agents as commerce participants (buy AND sell)
-- ✅ On-chain identity and reputation (ERC-8004 deployed on Kite Testnet)
-- ✅ Autonomous settlement (CDP wallet + UserOp via Kite AA SDK)
-- ✅ Multi-protocol agent interop (x402, A2A, AP2, MCP)
-- ✅ Novel economic model (agent-as-creator/seller)
+- AI agents conducting on-chain payments (x402 + Kite AA SDK)
+- Agents as commerce participants (buy AND sell)
+- On-chain identity and reputation (ERC-8004 deployed on Kite Testnet)
+- Autonomous settlement (CDP wallet + UserOp via Kite AA SDK)
+- Multi-protocol agent interop (x402, A2A, AP2, MCP)
+- Novel economic model (agent-as-creator/seller)
 
 ---
 
