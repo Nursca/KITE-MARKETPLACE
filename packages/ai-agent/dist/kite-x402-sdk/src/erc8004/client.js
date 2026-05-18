@@ -9,10 +9,11 @@ const viem_1 = require("viem");
 const accounts_1 = require("viem/accounts");
 const kite_1 = require("../kite");
 const abis_1 = require("./abis");
+// Kite Testnet (chainId 2368) deployed contracts from DeployERC8004.s.sol
 exports.ERC8004_CONTRACTS = {
-    identityRegistry: "0x7096C8FD97a399ec59C8DF7055329223821b46F1",
-    reputationRegistry: "0xc14d1eE6daCfe757cef570B339Ff8Ea7084bf354",
-    validationRegistry: "0x4fb2aBD8279659187B2792FfA6fE9a4837D4b411",
+    identityRegistry: "0x9788b77d09e2d189b9c7e1d392b7f762d5650a3a",
+    reputationRegistry: "0xead31017a6ca6cee1bb1bf7c1413cb7071e2b51d",
+    validationRegistry: "0x93ee9c875648846ba16ff6f6733ebf4659d4bcbe",
     agentPassport: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Placeholder for local/testnet deployment
 };
 const KITE_RPC = "https://rpc-testnet.gokite.ai/";

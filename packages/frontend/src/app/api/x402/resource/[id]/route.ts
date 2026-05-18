@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withX402, x402ResourceServer } from "@x402/next";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { extractAndVerifyPayment } from "@/lib/payment-verification";
 
 export const runtime = 'nodejs';
 
@@ -35,6 +36,9 @@ interface ResourceResponse {
 
 /**
  * Handler for x402 resource access
+ * CRITICAL: This handler now verifies all payments on-chain before granting access.
+ * This prevents the payment bypass vulnerability where ANY X-PAYMENT header was accepted.
+ * 
  * Signature matches withX402 expectations: (request: NextRequest) => Promise<NextResponse>
  */
 async function handler(req: NextRequest): Promise<NextResponse<ResourceResponse>> {
@@ -43,6 +47,23 @@ async function handler(req: NextRequest): Promise<NextResponse<ResourceResponse>
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
     const id = pathParts[pathParts.length - 1];
+
+    // CRITICAL SECURITY CHECK: Verify payment before granting access
+    console.log(`[x402 Resource] Processing request for resource ${id}`);
+    const paymentInfo = await extractAndVerifyPayment(req.headers);
+
+    if (!paymentInfo.isValid) {
+      console.warn(`[x402 Resource] Rejected request for ${id}: ${paymentInfo.error}`);
+      return NextResponse.json(
+        {
+          error: "Payment Required",
+          detail: paymentInfo.error || "Valid payment proof required to access this resource",
+        },
+        { status: 402 }
+      );
+    }
+
+    console.log(`[x402 Resource] ✓ Payment verified for ${id} (tx: ${paymentInfo.txHash})`);
 
     // Fetch listing from backend
     let resource: any = null;
@@ -74,7 +95,7 @@ async function handler(req: NextRequest): Promise<NextResponse<ResourceResponse>
       };
     }
 
-    // Return resource content after x402 payment verification
+    // Return resource content after successful payment verification
     return NextResponse.json({
       success: true,
       message: "Access granted!",

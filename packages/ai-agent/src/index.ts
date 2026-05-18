@@ -40,7 +40,7 @@ async function runAgent(prompt: string, modelType: string) {
 
   let model: any;
   if (modelType === 'anthropic') {
-    model = anthropic('claude-opus-4.6');
+    model = anthropic('claude-sonnet-4-6');
   } else if (modelType === 'groq') {
     model = groq('llama-3.3-70b-versatile');
   } else {
